@@ -87,6 +87,41 @@ static void draw_sprite_no_mask(Bitmap* bmp,
 }
 
 
+static void draw_text_base(
+    void (*draw_func) (Bitmap*, i16, i16, i16),
+    Bitmap* font, const str text, 
+    i16 x, i16 y, i16 endIndex, bool center, i16 div) {
+
+    i16 dx, dy;
+    i16 i = 0;
+    i16 d = font->frameWidth;
+    u8 c;
+
+    if (endIndex < 0)
+        endIndex = strlen(text);
+
+    if (center) {
+
+        x -= strlen(text) * (d / div) / 2;
+    }
+    dx = x;
+    dy = y;
+
+    while (i < endIndex && (c = text[i ++]) != '\0') {
+
+        if (c == '\n') {
+
+            dx = x;
+            dy += d;
+            continue;
+        }
+
+        draw_func(font, (i16)c, dx, dy);
+        dx += d / div;
+    }
+}
+
+
 
 void init_graphics(CGAPalette palette) {
 
@@ -219,4 +254,86 @@ void draw_sprite(Bitmap* bmp, i16 frame, i16 dx, i16 dy) {
 
         djump += 80 * (y & 1) - sw;
     }   
+}
+
+
+void fill_rect_fast(i16 x, i16 y, i16 w, i16 h, u8 color) {
+
+    i16 i;
+    u32 jump;
+    u8 p = COLOR(color);
+
+    jump = (u32)((y/2)*80 + x);
+    for (i = y; i < y+h; ++ i) {
+
+        memset((void*)(ADDR[i & 1] + jump), p, w);
+        jump += 80 * (i & 1);
+    }
+}
+
+
+void fill_rect(i16 dx, i16 dy, i16 w, i16 h, u8 color) {
+
+    i16 y;
+    u8 leftMask, rightMask;
+    u32 offset;
+    u8 p = COLOR(color);
+    u8* out;
+
+    offset = (u32)((dy/2)*80 + (dx >> 2));
+
+    if ((dx % 4) + w <= 4) {
+
+        leftMask = 255 << (8 - w * 2);
+        leftMask >>= ((dx % 4)*2);
+
+        for (y = dy; y < dy + h; ++ y) {
+
+            out = (u8*)ADDR[y & 1];
+            out[offset] = (out[offset] & (~leftMask)) | (p & leftMask);
+
+            offset += 80 * (y & 1);
+        }
+        return;
+    }
+
+    leftMask = 255 >> ((dx % 4)*2);
+    rightMask = 255 >> (((dx + w) % 4)*2);
+
+    w >>= 2;
+    dx >>= 2;
+
+    for (y = dy; y < dy + h; ++ y) {
+
+        out = (u8*)ADDR[y & 1];
+
+        // Left-most pixel(s)
+        out[offset] = (out[offset] & (~leftMask)) | (p & leftMask);
+        // Right-most pixel(s)
+        out[offset + w] = (out[offset + w] & rightMask) | (p & (~rightMask));
+
+        // Middle pixels
+        if (w > 1)
+            memset((void*)(out + offset + 1), p, w - 1);
+
+        offset += 80 * (y & 1);
+    }
+}
+
+
+void draw_text_fast(Bitmap* font, const str text, 
+    i16 x, i16 y, i16 endIndex, bool center) {
+
+    draw_text_base(draw_sprite_fast,
+        font, text, x, y, 
+        endIndex, center, 4);
+}
+
+
+void draw_text(Bitmap* font, const str text, 
+    i16 x, i16 y, i16 endIndex, bool center) {
+
+    draw_text_base(draw_sprite,
+        font, text, x, y, 
+        endIndex, center, 4);
 }

@@ -11,8 +11,12 @@
 typedef struct {
 
     Bitmap* bmpTest;
+    Bitmap* bmpFont;
+
     i16 spriteFrame;
     i16 spriteCounter;
+
+    bool backgroundDrawn;
 
 } GameScene;
 
@@ -28,13 +32,15 @@ static i16 game_init() {
         return 1;
     }
 
-    if ((game->bmpTest = load_bitmap("TEST1.SPR")) == NULL) {
+    if ((game->bmpTest = load_bitmap("TEST1.SPR")) == NULL ||
+        (game->bmpFont = load_bitmap("FONT.SPR")) == NULL) {
 
         return 1;
     }
 
     game->spriteFrame = 0;
     game->spriteCounter = 0;
+    game->backgroundDrawn = false;
 
     return 0;
 }
@@ -59,10 +65,15 @@ static void game_redraw() {
     i16 frame = game->spriteFrame;
     if (frame == 3) frame = 1;
 
-    clear_screen(1);
+    if (!game->backgroundDrawn) {
+        
+        clear_screen(1);
+        game->backgroundDrawn = true;
+    }
 
-    draw_sprite(game->bmpTest, 1 + frame, 4, 16);
-
+    fill_rect_fast(2, 32, 16, 16, 1);
+    draw_sprite(game->bmpTest, 1 + frame, 8, 32);
+    draw_text_fast(game->bmpFont, "CGA DEMO 2", 2, 8, -1, false);
 }
 
 

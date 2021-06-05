@@ -6,21 +6,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#include "types.h"
 
-#define INTEGER(type, bits) typedef type i##bits; \
-typedef unsigned type u##bits;
-
-typedef unsigned char byte;
-
-INTEGER(char, 8)
-INTEGER(short, 16)
-INTEGER(int, 32)
-INTEGER(long, 64)
-
-typedef float f32;
-typedef double f64;
-
-typedef char* str;
 
 static unsigned char COLORS[][3] = {
     {0, 0, 0},

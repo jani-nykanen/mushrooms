@@ -13,6 +13,7 @@ i16 main(i16 argc, str* argv) {
     game_register_event_callbacks();
     system_run_application(1);
 
+    dispose_game_scene();
     dispose_system();
 
     return 0;
