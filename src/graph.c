@@ -28,6 +28,65 @@ static void asm__set_palette(u8 index);
     parm [bl];
 
 
+static void draw_sprite_no_mask(Bitmap* bmp, 
+    i16 frame, i16 dx, i16 dy) {
+
+    i16 x, y, w;
+    u8 leftShift, rightShift;
+    u8 leftMask, rightMask;
+    u32 djump;
+    u32 sjump;
+    u8 color;
+
+    i16 sy = frame * bmp->frameHeight;
+    i16 sw = bmp->frameWidth;
+    i16 sh = bmp->frameHeight;
+
+    u8* out;
+
+    w = bmp->width >> 2;
+    sw >>= 2;
+
+    rightShift = (u8)((dx % 4) * 2);
+    leftShift = (u8)(8 - rightShift);
+
+    leftMask = 255 << leftShift;
+    rightMask = 255 >> rightShift;
+
+    dx >>= 2;
+    djump = (u32)((dy/2)*80 + dx);
+    sjump = (u32)(sy*w);
+
+    for (y = dy; y < dy + sh; ++ y) {   
+
+        out = (u8*)ADDR[y & 1];
+
+        // Left-most pixel
+        color = (bmp->pixels[sjump] >> rightShift) & rightMask;
+        out[djump] = (color & rightMask) | (out[djump] & leftMask);
+
+        ++ sjump;
+        ++ djump;
+
+        // Middle pixels
+        for (x = 1; x < sw; ++ x) {
+            
+            out[djump] = (bmp->pixels[sjump-1] << leftShift) |  
+                (bmp->pixels[sjump] >> rightShift);
+
+            ++ sjump;
+            ++ djump;
+        }
+
+        // Right-most pixel
+        color = (bmp->pixels[sjump-1] << leftShift) & leftMask;
+        out[djump] = (out[djump] & rightMask) | (color & leftMask);
+
+        djump += 80 * (y & 1) - sw;
+    }   
+}
+
+
 
 void init_graphics(CGAPalette palette) {
 
@@ -87,4 +146,77 @@ void draw_sprite_fast(Bitmap* bmp, i16 frame, i16 dx, i16 dy) {
         djump += 80 * (i & 1);
         sjump += w;
     }  
+}
+
+
+void draw_sprite(Bitmap* bmp, i16 frame, i16 dx, i16 dy) {
+
+    i16 x, y, w;
+    u8 leftShift, rightShift;
+    u8 leftMask, rightMask;
+    u8 alphaMask;
+    u32 djump;
+    u32 sjump;
+    u8 leftBits, rightBits, color;
+
+    i16 sy = frame * bmp->frameHeight;
+    i16 sw = bmp->frameWidth;
+    i16 sh = bmp->frameHeight;
+
+    u8* out;
+
+    if (bmp->mask == NULL) {
+
+        draw_sprite_no_mask(bmp, frame, dx, dy);
+        return;
+    }
+
+    w = bmp->width >> 2;
+    sw >>= 2;
+
+    rightShift = (u8)((dx % 4) * 2);
+    leftShift = (u8)(8 - rightShift);
+
+    leftMask = 255 << leftShift;
+    rightMask = 255 >> rightShift;
+
+    dx >>= 2;
+    djump = (u32)((dy/2)*80 + dx);
+    sjump = (u32)(sy*w);
+
+    for (y = dy; y < dy + sh; ++ y) {   
+
+        out = (u8*)ADDR[y & 1];
+
+        // Left-most pixel
+        alphaMask = bmp->mask[sjump] >> rightShift;
+        color = (bmp->pixels[sjump] >> rightShift) & rightMask;
+        out[djump] = (color & alphaMask) | (out[djump] & (~alphaMask));
+
+        ++ sjump;
+        ++ djump;
+
+        // Middle pixels
+        for (x = 1; x < sw; ++ x) {
+            
+            alphaMask = (bmp->mask[sjump-1] << leftShift) | 
+                (bmp->mask[sjump] >> rightShift);
+
+            leftBits = ((bmp->pixels[sjump-1] << leftShift) & leftMask);
+            rightBits = ((bmp->pixels[sjump] >> rightShift) & rightMask);
+            color = leftBits | rightBits;
+
+            out[djump] = (color & alphaMask) | (out[djump] & (~alphaMask));
+
+            ++ sjump;
+            ++ djump;
+        }
+
+        // Right-most pixel
+        alphaMask = bmp->mask[sjump-1] << leftShift;
+        color = (bmp->pixels[sjump-1] << leftShift) & leftMask;
+        out[djump] = (color & alphaMask) | (out[djump] & (~alphaMask));
+
+        djump += 80 * (y & 1) - sw;
+    }   
 }

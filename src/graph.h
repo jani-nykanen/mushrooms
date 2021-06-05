@@ -25,5 +25,6 @@ void set_palette(CGAPalette index);
 void clear_screen(u8 color);
 
 void draw_sprite_fast(Bitmap* bmp, i16 frame, i16 x, i16 y);
+void draw_sprite(Bitmap* bmp, i16 frame, i16 x, i16 y);
 
 #endif // __GRAPHICS__

@@ -11,6 +11,8 @@
 typedef struct {
 
     Bitmap* bmpTest;
+    i16 spriteFrame;
+    i16 spriteCounter;
 
 } GameScene;
 
@@ -31,13 +33,22 @@ static i16 game_init() {
         return 1;
     }
 
+    game->spriteFrame = 0;
+    game->spriteCounter = 0;
+
     return 0;
 }
 
 
 static i16 game_update(i16 step) {
 
-    // ...
+    static const i16 FRAME_LENGTH = 8;
+
+    if ((game->spriteCounter += step) >= FRAME_LENGTH) {
+
+        game->spriteCounter -= FRAME_LENGTH;
+        game->spriteFrame = (game->spriteFrame + 1) % 4;
+    }
 
     return 0;
 }
@@ -45,9 +56,12 @@ static i16 game_update(i16 step) {
 
 static void game_redraw() {
 
+    i16 frame = game->spriteFrame;
+    if (frame == 3) frame = 1;
+
     clear_screen(1);
 
-    draw_sprite_fast(game->bmpTest, 1, 4, 16);
+    draw_sprite(game->bmpTest, 1 + frame, 4, 16);
 
 }
 
