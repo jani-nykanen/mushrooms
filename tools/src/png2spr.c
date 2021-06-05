@@ -81,25 +81,25 @@ static void write_array(FILE* f, u8* arr, u32 len) {
 }
 
 
-static bool rearrange(u8* pixels, u8* mask, i32 w, i32 h, i32 fw, i32 fh, u8* pout, u8* mout) {
+static bool rearrange(u8* pixels, u8* mask, i32 w, i32 h, i32 fw, i32 fh, u8** pout, u8** mout) {
 
     i32 x, y, sx, sy;
     i32 sw = w / fw;
     i32 sh = h / fh;
     u32 i, j;
 
-    pout = (u8*) calloc(w * h, 1);
-    if (pout == NULL)
+    (*pout) = (u8*) calloc(w * h, 1);
+    if ((*pout) == NULL)
         return true;
 
     if (mask != NULL) {
 
-        mout = (u8*) calloc(w * h, 1);
-        if (mout == NULL)
+        (*mout) = (u8*) calloc(w * h, 1);
+        if ((*mout) == NULL)
             return true;
     }
 
-    if (pout == NULL)
+    if ((*pout) == NULL)
         return true;
 
     i = 0;
@@ -113,9 +113,9 @@ static bool rearrange(u8* pixels, u8* mask, i32 w, i32 h, i32 fw, i32 fh, u8* po
 
                     j = (sy * fh + y) * w + sx * fw + x;
 
-                    pout[i] = pixels[j];
+                    (*pout)[i] = pixels[j];
                     if (mask != NULL)
-                        mout[i] = mask[j]; 
+                        (*mout)[i] = mask[j]; 
 
                     ++ i;
                 }
@@ -141,8 +141,8 @@ static i32 convert_bitmap(const str in, const str out, bool writeMask,
     u8* cdata;
     u8* mask;
 
-    u8* rcdata;
-    u8* rmask;
+    u8* rcdata = NULL;
+    u8* rmask = NULL;
 
     u32 i;
     FILE* f;
@@ -187,12 +187,11 @@ static i32 convert_bitmap(const str in, const str out, bool writeMask,
         mask[i] = (u8)(pdata[i*4 + 3] >= ALPHA_LIMIT) * 3;
     }
 
-    if (rearrange(cdata, mask, w, h, frameWidth, frameHeight, rcdata, rmask)) {
+    if (rearrange(cdata, mask, w, h, frameWidth, frameHeight, &rcdata, &rmask)) {
 
         fprintf(stderr, "Memory allocation error!\n");
         return 1;
     }
-
 
     f = fopen(out, "wb");
     if (f == NULL) {
@@ -203,18 +202,16 @@ static i32 convert_bitmap(const str in, const str out, bool writeMask,
         return 1;
     }
 
-    // Dimensions
-    sout = (u16)w;
+    // Frame dimensions
+    sout = (u16)frameWidth;
     fwrite(&sout, sizeof(u16), 1, f);
-    sout = (u16)h;
+    sout = (u16)frameHeight;
     fwrite(&sout, sizeof(u16), 1, f);
-
     // Frame count
     x = w / frameWidth;
     y = h / frameHeight;
     sout = y * x;
     fwrite(&sout, sizeof(u16), 1, f);
-
 
     // Does have a mask
     bout = (u8)writeMask;
