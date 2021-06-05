@@ -6,7 +6,7 @@
 
 
 #define ERROR_MAX_LENGTH 64
-#define error_MALLOC() error_throw("Memory allocation error!");
+#define ERROR_MALLOC() error_throw("Memory allocation error!");
 
 
 void init_error_system();

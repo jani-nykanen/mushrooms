@@ -31,6 +31,9 @@ static void asm__set_palette(u8 index);
 
 void init_graphics(CGAPalette palette) {
 
+    ADDR[0] = CGA_EVEN;
+    ADDR[1] = CGA_ODD;
+
     set_video_mode(5);
     set_palette(palette);
 }
@@ -61,4 +64,27 @@ void clear_screen(u8 color) {
 
     memset((void*)CGA_EVEN, p, 8000);
     memset((void*)CGA_ODD, p, 8000);
+}
+
+
+void draw_sprite_fast(Bitmap* bmp, i16 frame, i16 dx, i16 dy) {
+
+    i16 i;
+    u32 djump;
+    u32 sjump;
+    u16 w = bmp->frameWidth / 4;
+
+    i16 sy = bmp->frameHeight * frame;
+
+    djump = (u32)((dy/2)*80 + dx);
+    sjump = (u32)(sy*w);
+
+    for (i = dy; i < dy + bmp->frameHeight; ++ i) {
+
+        memcpy((void*)(ADDR[i & 1] + djump), 
+               (void*)((u32)bmp->pixels + sjump), w);
+
+        djump += 80 * (i & 1);
+        sjump += w;
+    }  
 }

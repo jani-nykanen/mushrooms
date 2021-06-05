@@ -2,6 +2,7 @@
 
 #include "keyb.h"
 #include "keycodes.h"
+#include "err.h"
 
 #include <stdlib.h>
 
@@ -60,6 +61,7 @@ static bool main_loop(i16 frameSkip) {
 
 i16 init_system(CGAPalette initialPalette) {
 
+    init_error_system();
     init_graphics(initialPalette);
     init_keyboard_listener();
 
