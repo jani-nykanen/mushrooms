@@ -10,7 +10,7 @@
 
 typedef struct {
 
-    Bitmap* bmpTest;
+    Bitmap* bmpNoMask;
     Bitmap* bmpFont;
 
     i16 spriteFrame;
@@ -32,7 +32,7 @@ static i16 game_init() {
         return 1;
     }
 
-    if ((game->bmpTest = load_bitmap("TEST1.SPR")) == NULL ||
+    if ((game->bmpNoMask = load_bitmap("NOMASK.SPR")) == NULL ||
         (game->bmpFont = load_bitmap("FONT.SPR")) == NULL) {
 
         return 1;
@@ -72,7 +72,7 @@ static void game_redraw() {
     }
 
     fill_rect_fast(2, 32, 16, 16, 1);
-    draw_sprite(game->bmpTest, 1 + frame, 8, 32);
+    draw_sprite(game->bmpNoMask, frame, 8, 32);
     draw_text_fast(game->bmpFont, "CGA DEMO 2", 2, 8, -1, false);
 }
 
@@ -87,7 +87,7 @@ void dispose_game_scene() {
 
     if (game == NULL) return;
 
-    dispose_bitmap(game->bmpTest);
+    dispose_bitmap(game->bmpNoMask);
     free(game);
 }
 
