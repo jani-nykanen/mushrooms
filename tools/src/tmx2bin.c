@@ -130,12 +130,34 @@ static i32 load_file_to_buffer(const str path) {
 }
 
 
+static void write_map(FILE* f, i32* data, i32 width, i32 height) {
+
+    u16 sout;
+    u8 bout;
+    i32 i;
+
+    sout = (u16) width;
+    fwrite(&sout, sizeof(u16), 1, f);
+
+    sout = (u16) height;
+    fwrite(&sout, sizeof(u16), 1, f);
+
+    for (i = 0; i < width*height; ++ i) {
+
+        bout = (u8) data[i];
+        fwrite(&bout, 1, 1, f);
+    }
+}
+
+
 i32 main(i32 argc, str* argv) {
 
+    u8 bout;
     str output;
     i32 i, j;
     i32 width, height;
     i32* tileBuffer = NULL;
+    FILE* f;
 
     if (argc <= 2) {
         
@@ -144,6 +166,17 @@ i32 main(i32 argc, str* argv) {
     }
 
     output = argv[1];
+    f = fopen(output, "wb");
+    if (f == NULL) {
+
+        fprintf(stderr, "Failed to write a file %s!\n", output);
+        return 1;
+    }
+
+    // Map count
+    bout = (u8) (argc - 2);
+    fwrite(&bout, 1, 1, f);
+
     for (i = 2; i < argc; ++ i) {
 
         if (load_file_to_buffer(argv[i]) != 0) {
@@ -166,8 +199,12 @@ i32 main(i32 argc, str* argv) {
             return 1;
         }
 
+        write_map(f, tileBuffer, width, height);
+
         free(tileBuffer);
     }
+
+    fclose(f);
 
     return 0;
 }
