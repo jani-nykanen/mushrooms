@@ -10,7 +10,6 @@ typedef enum {
 
     PALETTE_WARM = 0,
     PALETTE_COOL = 1,
-    
 
 } CGAPalette;
 

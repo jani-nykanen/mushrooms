@@ -14,7 +14,17 @@ typedef struct {
 } Tilemap;
 
 
-Tilemap* load_tilemap_from_map_pack(const str path, i16 index);
+typedef struct {
+
+    Tilemap** maps;
+    u8 count;
+
+} TilemapPack;
+
+
+TilemapPack* load_tilemap_pack(const str path);
+void dispose_tilemap_pack(TilemapPack* pack);
+
 void dispose_tilemap(Tilemap* tmap);
 
 

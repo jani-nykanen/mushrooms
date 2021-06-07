@@ -3,18 +3,20 @@
 #include "bitmap.h"
 #include "system.h"
 #include "err.h"
+#include "stage.h"
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 
 typedef struct {
 
-    Bitmap* bmpNoMask;
+    Bitmap* bmpSprites;
+    Bitmap* bmpTileset;
     Bitmap* bmpFont;
 
-    i16 spriteFrame;
-    i16 spriteCounter;
+    Stage* stage;
 
     bool backgroundDrawn;
 
@@ -32,14 +34,19 @@ static i16 game_init() {
         return 1;
     }
 
-    if ((game->bmpNoMask = load_bitmap("NOMASK.SPR")) == NULL ||
+    if ((game->bmpTileset = load_bitmap("TILESET.SPR")) == NULL ||
+        (game->bmpSprites = load_bitmap("SPRITES.SPR")) == NULL ||
         (game->bmpFont = load_bitmap("FONT.SPR")) == NULL) {
 
         return 1;
     }
 
-    game->spriteFrame = 0;
-    game->spriteCounter = 0;
+    game->stage = new_stage("LEVELS1.DAT", 0);
+    if (game->stage == NULL) {
+
+        return 1;
+    }
+
     game->backgroundDrawn = false;
 
     return 0;
@@ -48,31 +55,20 @@ static i16 game_init() {
 
 static i16 game_update(i16 step) {
 
-    static const i16 FRAME_LENGTH = 8;
-
-    if ((game->spriteCounter += step) >= FRAME_LENGTH) {
-
-        game->spriteCounter -= FRAME_LENGTH;
-        game->spriteFrame = (game->spriteFrame + 1) % 4;
-    }
-
     return 0;
 }
 
 
 static void game_redraw() {
 
-    i16 frame = game->spriteFrame;
-    if (frame == 3) frame = 1;
-
     if (!game->backgroundDrawn) {
         
-        clear_screen(1);
+        clear_screen(0);
         game->backgroundDrawn = true;
     }
 
-    fill_rect_fast(2, 32, 16, 16, 1);
-    draw_sprite(game->bmpNoMask, frame, 8, 32);
+    stage_draw(game->stage, game->bmpTileset);
+
     draw_text_fast(game->bmpFont, "CGA DEMO 2", 2, 8, -1, false);
 }
 
@@ -87,7 +83,10 @@ void dispose_game_scene() {
 
     if (game == NULL) return;
 
-    dispose_bitmap(game->bmpNoMask);
+    dispose_stage(game->stage);
+
+    dispose_bitmap(game->bmpTileset);
+    dispose_bitmap(game->bmpSprites);
     free(game);
 }
 

@@ -17,5 +17,7 @@ void error_throw_str(const str msg, str param);
 bool error_has_any();
 bool error_pop(str buffer);
 
+str error_get_next_direct();
+
 
 #endif // __ERROR__

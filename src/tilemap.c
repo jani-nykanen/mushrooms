@@ -6,14 +6,14 @@
 #include <stdio.h>
 
 
-Tilemap* load_tilemap_from_map_pack(const str path, i16 index) {
+TilemapPack* load_tilemap_pack(const str path) {
 
-    Tilemap* out;
+    TilemapPack* out;
     u16 i;
     u16 width, height;
     FILE* f;
     
-    out = (Tilemap*) calloc(1, sizeof(Tilemap));
+    out = (TilemapPack*) calloc(1, sizeof(TilemapPack));
     if (out == NULL) {
 
         ERROR_MALLOC();
@@ -27,35 +27,55 @@ Tilemap* load_tilemap_from_map_pack(const str path, i16 index) {
         return NULL;
     }
 
-    // Find starting position
-    fread(&width, sizeof(u16), 1, f);
-    fread(&height, sizeof(u16), 1, f);
+    fread(&out->count, 1, 1, f);
 
-    for (i = 0; i < index; ++ i) {
-
-        fseek(f, width*height, SEEK_CUR);
-        fread(&width, sizeof(u16), 1, f);
-        fread(&height, sizeof(u16), 1, f);
-    }
-
-    out->data = (u8*) malloc(width*height);
-    if (out->data == NULL) {
-
-        fclose(f);
-        free(out);
+    out->maps = (Tilemap**) calloc(out->count, sizeof(Tilemap*));
+    if (out->maps == NULL) {
 
         ERROR_MALLOC();
+
+        free(out);
         return NULL;
     }
 
-    fread(out->data, 1, width*height, f);
+    for (i = 0; i < (i16) out->count; ++ i) {
+
+        fread(&width, sizeof(u16), 1, f);
+        fread(&height, sizeof(u16), 1, f);
+
+        out->maps[i] = (Tilemap*) calloc(1, sizeof(Tilemap*));
+        if (out->maps[i] == NULL) {
+
+            ERROR_MALLOC();
+
+            free(out);
+            return NULL;
+        }
+
+        fread(out->maps[i]->data, 1, width*height, f);
+
+        out->maps[i]->width = width;
+        out->maps[i]->height = height;
+    }
 
     fclose(f);
 
-    out->width = width;
-    out->height = height;
-
     return out;
+}
+
+
+void dispose_tilemap_pack(TilemapPack* pack) {
+
+    u16 i;
+
+    if (pack == NULL) return;
+
+    for (i = 0; i < pack->count; ++ i) {
+
+        dispose_tilemap(pack->maps[i]);
+    }
+
+    free(pack);
 }
 
 

@@ -46,4 +46,3 @@ bool error_pop(str buffer) {
     snprintf(buffer, ERROR_MAX_LENGTH, "%s", errorMessages[-- errCount]);
     return true;
 }
-
