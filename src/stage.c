@@ -96,7 +96,7 @@ void dispose_stage(Stage* stage) {
 
 void stage_draw(Stage* stage, Bitmap* bmpTileset) {
 
-    static const i16 TILE_INDEX[] = {1, 1, 4, 2, 3, 9, 11, 5, 6, 7, 8};
+    static const i16 TILE_INDEX[] = {1, 13, 4, 2, 3, 9, 11, 5, 6, 7, 8};
 
     i16 x, y;
     i16 dx, dy;
@@ -122,7 +122,7 @@ void stage_draw(Stage* stage, Bitmap* bmpTileset) {
                 }
                 else {
 
-                    tile = TILE_INDEX[tile];
+                    tile = TILE_INDEX[tile-1];
                     
                     draw_sprite_fast(bmpTileset, tile-1, dx/4, dy);
                 }

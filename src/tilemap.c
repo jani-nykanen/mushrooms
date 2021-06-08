@@ -43,12 +43,21 @@ TilemapPack* load_tilemap_pack(const str path) {
         fread(&width, sizeof(u16), 1, f);
         fread(&height, sizeof(u16), 1, f);
 
-        out->maps[i] = (Tilemap*) calloc(1, sizeof(Tilemap*));
+        out->maps[i] = (Tilemap*) calloc(1, sizeof(Tilemap));
         if (out->maps[i] == NULL) {
 
             ERROR_MALLOC();
 
-            free(out);
+            dispose_tilemap_pack(out);
+            return NULL;
+        }
+
+        out->maps[i]->data = (u8*) malloc(width*height);
+        if (out->maps[i]->data == NULL) {
+
+            ERROR_MALLOC();
+
+            dispose_tilemap_pack(out);
             return NULL;
         }
 

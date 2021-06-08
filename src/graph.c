@@ -170,6 +170,8 @@ void draw_sprite_fast(Bitmap* bmp, i16 frame, i16 dx, i16 dy) {
 
     i16 sy = bmp->frameHeight * frame;
 
+    if (frame < 0 || frame >= bmp->frameCount) return;
+
     djump = (u32)((dy/2)*80 + dx);
     sjump = (u32)(sy*w);
 
@@ -199,6 +201,8 @@ void draw_sprite(Bitmap* bmp, i16 frame, i16 dx, i16 dy) {
     i16 sh = bmp->frameHeight;
 
     u8* out;
+
+    if (frame < 0 || frame >= bmp->frameCount) return;
 
     if (bmp->mask == NULL) {
 
