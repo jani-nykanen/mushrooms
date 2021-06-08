@@ -4,10 +4,12 @@
 #include "system.h"
 #include "err.h"
 #include "stage.h"
+#include "player.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
 
 
 typedef struct {
@@ -18,12 +20,27 @@ typedef struct {
     Bitmap* bmpIcons;
 
     Stage* stage;
+    Player* player;
 
     bool backgroundDrawn;
+
+    i16 turnTimer;
 
 } GameScene;
 
 static GameScene* game;
+
+
+static void play_turn() {
+
+    game->turnTimer = GAME_TURN_TIME;
+}
+
+
+static i16 get_turn_time() {
+
+    return game->turnTimer;
+}
 
 
 static i16 game_init() {
@@ -49,13 +66,28 @@ static i16 game_init() {
         return 1;
     }
 
+    game->player = new_player(0, 0, play_turn, get_turn_time);
+    if (game->player == NULL) {
+
+        return 1;
+    }
+    stage_parse_objects(game->stage, (void*)game->player);
+
     game->backgroundDrawn = false;
+    game->turnTimer = 0;
 
     return 0;
 }
 
 
 static i16 game_update(i16 step) {
+
+    if (game->turnTimer > 0) {
+
+        game->turnTimer -= step;
+    }
+
+    player_update(game->player, game->stage, step);
 
     return 0;
 }
@@ -99,12 +131,14 @@ static void game_redraw() {
         clear_screen(0);
         draw_stage_borders();
 
+        draw_text_fast(game->bmpFont, "CGA DEMO 2", 2, 8, -1, false);
+
         game->backgroundDrawn = true;
     }
 
     stage_draw(game->stage, game->bmpTileset);
 
-    draw_text_fast(game->bmpFont, "CGA DEMO 2", 2, 8, -1, false);
+    player_draw(game->player, game->stage, game->bmpSprites);
 }
 
 
