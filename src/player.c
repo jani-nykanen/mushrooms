@@ -34,6 +34,9 @@ Player* new_player(i16 x, i16 y,
     player->animationFrame = 1;
     player->animationRow = 0;
 
+    player->loopx = 0;
+    player->loopy = 0;
+
     return player;
 }
 
@@ -68,6 +71,7 @@ static void player_stop_moving(Player* player, Stage* stage) {
 
     player->loopx = 0;
     player->loopy = 0;
+    
 }
 
 
@@ -186,6 +190,7 @@ void player_update(Player* player, Stage* stage, i16 step) {
 void player_draw(Player* player, Stage* stage, Bitmap* bmpSprites) {
 
     i16 frame;
+    i16 dx, dy;
 
     if (!player->redraw) return;
 
@@ -195,17 +200,26 @@ void player_draw(Player* player, Stage* stage, Bitmap* bmpSprites) {
     if (frame == 3)
         frame = 1;
         
+    dx = stage->topCorner.x + player->renderPos.x;
+    dy = stage->topCorner.y + player->renderPos.y;
 
-    draw_sprite(bmpSprites, 
-        player->animationRow*3 + frame,
-        stage->topCorner.x + player->renderPos.x,
-        stage->topCorner.y + player->renderPos.y);
+    draw_sprite(bmpSprites, player->animationRow*3 + frame, dx, dy);
 
     if (player->loopx != 0 || player->loopy != 0) {
 
         draw_sprite(bmpSprites, 
             player->animationRow*3 + frame,
-            stage->topCorner.x + player->renderPos.x + player->loopx * stage->width * 16,
-            stage->topCorner.y + player->renderPos.y + player->loopy * stage->height * 16);
+            dx + player->loopx * stage->width * 16,
+            dy + player->loopy * stage->height * 16);
+
+        fill_rect_fast(
+            stage->topCorner.x/4 + player->target.x*4,
+            stage->topCorner.y + player->target.y*16,
+            4, 16, 0);
+
+        fill_rect_fast(
+            stage->topCorner.x/4 + player->pos.x*4 + player->loopx * stage->width * 4,
+            stage->topCorner.y + player->pos.y*16 + player->loopy * stage->height * 16,
+            4, 16, 0);
     }
 }

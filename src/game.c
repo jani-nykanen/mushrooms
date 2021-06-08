@@ -124,6 +124,40 @@ static void draw_stage_borders() {
 }
 
 
+// In the case that the player is "looping"
+static void draw_overlaying_frame() {
+
+    i16 i;
+    i16 w = game->stage->width * 4; 
+    i16 h = game->stage->height * 16;
+
+	i16 tx = game->stage->topCorner.x / 4;
+	i16 ty = game->stage->topCorner.y;
+
+    if (game->player->loopx != 0) {
+
+        ty += game->player->target.y*16;
+
+        draw_sprite_fast(game->bmpIcons, 1, tx - 2, ty);
+        draw_sprite_fast(game->bmpIcons, 1, tx - 2, ty + 8);
+
+        draw_sprite_fast(game->bmpIcons, 3, tx + w, ty);
+        draw_sprite_fast(game->bmpIcons, 3, tx + w, ty + 8);
+    }
+
+    if (game->player->loopy != 0) {
+
+        tx += game->player->target.x*4;
+
+        draw_sprite_fast(game->bmpIcons, 0, tx,  ty - 8);
+        draw_sprite_fast(game->bmpIcons, 0, tx + 2, ty - 8);
+
+        draw_sprite_fast(game->bmpIcons, 2, tx, ty + h);
+        draw_sprite_fast(game->bmpIcons, 2, tx + 2, ty + h);
+    }
+}
+
+
 static void game_redraw() {
 
     if (!game->backgroundDrawn) {
@@ -139,6 +173,11 @@ static void game_redraw() {
     stage_draw(game->stage, game->bmpTileset);
 
     player_draw(game->player, game->stage, game->bmpSprites);
+
+    if (game->player->loopx != 0 || game->player->loopy != 0) {
+
+        draw_overlaying_frame();
+    }
 }
 
 
