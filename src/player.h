@@ -19,7 +19,11 @@ typedef struct {
     i16 (*getTurnTime) (void);
 
     i16 animationFrame;
-    i16 faceDir;
+    i16 animationTimer;
+    i16 animationRow;
+
+    i8 loopx;
+    i8 loopy;
 
 } Player;
 

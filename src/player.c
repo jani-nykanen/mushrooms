@@ -31,8 +31,8 @@ Player* new_player(i16 x, i16 y,
     player->playTurn = playTurn;
     player->getTurnTime = getTurnTime;
 
-    player->animationFrame = 0;
-    player->faceDir = 0;
+    player->animationFrame = 1;
+    player->animationRow = 0;
 
     return player;
 }
@@ -65,6 +65,9 @@ static void player_stop_moving(Player* player, Stage* stage) {
     player->moving = false;
     player->pos = player->target;
     player->renderPos = vec2(player->pos.x*16, player->pos.y*16); 
+
+    player->loopx = 0;
+    player->loopy = 0;
 }
 
 
@@ -73,7 +76,7 @@ static void player_control(Player* player, Stage* stage, i16 step) {
     i16 dirx = 0;
     i16 diry = 0;
     Vector2 target;
-    i16 faceDir;
+    i16 animationRow;
 
     if (player->moving) {
 
@@ -93,22 +96,22 @@ static void player_control(Player* player, Stage* stage, i16 step) {
     if (keyb_get_ext_key(KEY_UP) & STATE_DOWN_OR_PRESSED) {
 
         diry = -1;
-        faceDir = 1;
+        animationRow = 1;
     }
     else if (keyb_get_ext_key(KEY_DOWN) & STATE_DOWN_OR_PRESSED) {
 
         diry = 1;
-        faceDir = 0;
+        animationRow = 0;
     }
     else if (keyb_get_ext_key(KEY_LEFT) & STATE_DOWN_OR_PRESSED) {
 
         dirx = -1;
-        faceDir = 3;
+        animationRow = 3;
     }
     else if (keyb_get_ext_key(KEY_RIGHT) & STATE_DOWN_OR_PRESSED) {
 
         dirx = 1;
-        faceDir = 2;
+        animationRow = 2;
     }
 
     target = vec2(player->pos.x + dirx, player->pos.y + diry);
@@ -120,9 +123,28 @@ static void player_control(Player* player, Stage* stage, i16 step) {
         player->target = target;
         player->moving = true;
         player->redraw = true;
-        player->faceDir = faceDir;
+
+        if (animationRow != player->animationRow) {
+
+            player->animationFrame = 1;
+            player->animationTimer = 0;
+            player->animationRow = animationRow;
+        }
 
         player->playTurn();
+
+        player->loopx = 0;
+        player->loopy = 0;
+
+        if (player->target.x < 0)
+            player->loopx = 1;
+        else if (player->target.x >= stage->width)
+            player->loopx = -1;
+
+        if (player->target.y < 0)
+            player->loopy = 1;
+        else if (player->target.y >= stage->height)
+            player->loopy = -1;
     }
 
 }
@@ -130,11 +152,18 @@ static void player_control(Player* player, Stage* stage, i16 step) {
 
 static void player_animate(Player* player, Stage* stage, i16 step) {
 
+    static const i16 FRAME_TIME = 8;
+
     i16 turnTime = GAME_TURN_TIME - player->getTurnTime();
 
     if (!player->moving) return;
 
-    player->animationFrame = player->faceDir*2 + (turnTime / 8);    
+    player->animationTimer += step; 
+    if (player->animationTimer >= FRAME_TIME) {
+
+        player->animationTimer -= FRAME_TIME;
+        player->animationFrame = (player->animationFrame + 1) % 4;
+    }
 
     player->renderPos.x = player->pos.x*16 + 
         turnTime * (player->target.x - player->pos.x);
@@ -156,11 +185,27 @@ void player_update(Player* player, Stage* stage, i16 step) {
 
 void player_draw(Player* player, Stage* stage, Bitmap* bmpSprites) {
 
+    i16 frame;
+
     if (!player->redraw) return;
 
     player->redraw = false;
 
-    draw_sprite(bmpSprites, player->animationFrame,
+    frame = player->animationFrame;
+    if (frame == 3)
+        frame = 1;
+        
+
+    draw_sprite(bmpSprites, 
+        player->animationRow*3 + frame,
         stage->topCorner.x + player->renderPos.x,
         stage->topCorner.y + player->renderPos.y);
+
+    if (player->loopx != 0 || player->loopy != 0) {
+
+        draw_sprite(bmpSprites, 
+            player->animationRow*3 + frame,
+            stage->topCorner.x + player->renderPos.x + player->loopx * stage->width * 16,
+            stage->topCorner.y + player->renderPos.y + player->loopy * stage->height * 16);
+    }
 }
