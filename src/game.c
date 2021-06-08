@@ -15,6 +15,7 @@ typedef struct {
     Bitmap* bmpSprites;
     Bitmap* bmpTileset;
     Bitmap* bmpFont;
+    Bitmap* bmpIcons;
 
     Stage* stage;
 
@@ -36,6 +37,7 @@ static i16 game_init() {
 
     if ((game->bmpTileset = load_bitmap("TILESET.SPR")) == NULL ||
         (game->bmpSprites = load_bitmap("SPRITES.SPR")) == NULL ||
+        (game->bmpIcons = load_bitmap("ICONS.SPR")) == NULL ||
         (game->bmpFont = load_bitmap("FONT.SPR")) == NULL) {
 
         return 1;
@@ -59,11 +61,44 @@ static i16 game_update(i16 step) {
 }
 
 
+static void draw_stage_borders() {
+
+    i16 i;
+    i16 w = game->stage->width * 2; 
+    i16 h = game->stage->height * 2;
+
+	i16 tx = game->stage->topCorner.x / 4;
+	i16 ty = game->stage->topCorner.y;
+
+    for (i = 0; i < w; ++ i) {
+
+        draw_sprite_fast(game->bmpIcons, 0, tx + i*2, ty-8);
+
+        draw_sprite_fast(game->bmpIcons, 2, tx + i*2, ty + h*8);   
+    }
+
+    for (i = 0; i < h; ++ i) {
+
+        draw_sprite_fast(game->bmpIcons, 1, tx - 2, ty + i*8);
+
+        draw_sprite_fast(game->bmpIcons, 3, tx + w*2, ty + i*8);
+    }
+
+    // Corners
+    draw_sprite_fast(game->bmpIcons, 4, tx - 2, ty-8);
+    draw_sprite_fast(game->bmpIcons, 5, tx + w*2, ty-8);
+    draw_sprite_fast(game->bmpIcons, 6, tx - 2, ty + h*8);
+    draw_sprite_fast(game->bmpIcons, 7, tx + w*2, ty + h*8);
+}
+
+
 static void game_redraw() {
 
     if (!game->backgroundDrawn) {
         
         clear_screen(0);
+        draw_stage_borders();
+
         game->backgroundDrawn = true;
     }
 
@@ -87,6 +122,9 @@ void dispose_game_scene() {
 
     dispose_bitmap(game->bmpTileset);
     dispose_bitmap(game->bmpSprites);
+    dispose_bitmap(game->bmpFont);
+    dispose_bitmap(game->bmpIcons);
+
     free(game);
 }
 
