@@ -10,6 +10,11 @@
 #include <string.h>
 
 
+static const u8 MIN_ARROW_INDEX = 8;
+static const i16 X_DIR[] = {0, 0, 1, -1};
+static const i16 Y_DIR[] = {-1, 1, 0, 0};
+
+
 static u8* copy_static_layer(Tilemap* tmap) {
 
     i16 i;
@@ -107,7 +112,12 @@ void stage_mark_for_redraw(Stage* stage, i16 x, i16 y) {
 
 void stage_draw(Stage* stage, Bitmap* bmpTileset) {
 
-    static const i16 TILE_INDEX[] = {1, 13, 4, 2, 3, 9, 11, 5, 6, 7, 8};
+    static const i16 TILE_INDEX[] = {
+        1, 13, 4, 2, 
+        3, 9, 11, 5, 
+        6, 7, 8,  0,
+        0, 0, 0,  0,
+        10, 12};
 
     i16 x, y;
     i16 dx, dy;
@@ -164,9 +174,9 @@ void stage_parse_objects(Stage* stage, void* pplayer) {
 
 bool stage_can_be_moved_to(Stage* stage, i16 x, i16 y, i16 dirx, i16 diry) {
 
-    #define SOLID_TILES_LENGTH 1
+    #define SOLID_TILES_LENGTH 2
 
-    static const u8 SOLID_TILES[] = {1};
+    static const u8 SOLID_TILES[] = {1, 5};
 
     u8 tile;
     i16 i;
@@ -182,9 +192,102 @@ bool stage_can_be_moved_to(Stage* stage, i16 x, i16 y, i16 dirx, i16 diry) {
 
             return false;
         }
+
+        if (tile >= MIN_ARROW_INDEX && tile < MIN_ARROW_INDEX + 4) {
+
+            if ((dirx * X_DIR[tile - MIN_ARROW_INDEX] < 0) ||
+                (diry * Y_DIR[tile - MIN_ARROW_INDEX] < 0)) {
+
+                return false;
+            }
+        }
     }
 
     return true;
 
     #undef SOLID_TILES_LENGTH
+}
+
+
+static void toggle_special_walls(Stage* stage, i16 j) {
+
+    i16 i;
+
+    for (i = 0; i < stage->width * stage->height; ++ i) {
+
+        if (stage->staticLayer[i] == 4) {
+
+            stage->staticLayer[i] = 5;
+            stage->redrawBuffer[i] = true;
+        }
+        else if (stage->staticLayer[i] == 5) {
+
+            stage->staticLayer[i] = 4;
+            stage->redrawBuffer[i] = true;
+        }
+        else if (stage->staticLayer[i] == 17) {
+
+            stage->staticLayer[i] = 6;
+            stage->redrawBuffer[i] = true;
+        }
+    }
+
+    stage->staticLayer[j] = 17;
+}
+
+
+static void reverse_arrow_tiles(Stage* stage, i16 j) {
+
+    static const u8 NEW_TILE_INDEX[] = {9, 8, 11, 10};
+
+    i16 i;
+    u8 tile;
+
+    for (i = 0; i < stage->width * stage->height; ++ i) {
+
+        tile = stage->staticLayer[i];
+        if (tile >= MIN_ARROW_INDEX && tile < MIN_ARROW_INDEX+4) {
+
+            stage->staticLayer[i] = NEW_TILE_INDEX[tile - MIN_ARROW_INDEX];
+            stage->redrawBuffer[i] = true;
+        }
+        else if (stage->staticLayer[i] == 18) {
+
+            stage->staticLayer[i] = 7;
+            stage->redrawBuffer[i] = true;
+        }
+    }
+
+    stage->staticLayer[j] = 18;
+}
+
+
+bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y, 
+    i16* dirx, i16* diry) {
+
+    u8 tile;
+
+    x = neg_mod(x, stage->width);
+    y = neg_mod(y, stage->height);
+
+    tile = stage->staticLayer[y * stage->width + x];
+
+    // Arrows
+    if (tile >= MIN_ARROW_INDEX && tile < MIN_ARROW_INDEX + 4) {
+
+        *dirx = X_DIR[tile - MIN_ARROW_INDEX];
+        *diry = Y_DIR[tile - MIN_ARROW_INDEX];
+    }
+    // Button to toggle walls on/off
+    else if (tile == 6) {
+
+        toggle_special_walls(stage, y * stage->width + x);
+    }
+    // Button to swap arrows
+    else if (tile == 7) {
+
+        reverse_arrow_tiles(stage, y * stage->width + x);
+    }
+
+    return (*dirx) != 0 || (*diry) != 0;
 }

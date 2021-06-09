@@ -21,6 +21,7 @@ typedef struct {
     i16 animationFrame;
     i16 animationTimer;
     i16 animationRow;
+    bool animate;
 
     i8 loopx;
     i8 loopy;

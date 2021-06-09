@@ -11,7 +11,7 @@
 
 static const u32 CGA_EVEN = 0xB8000000L;
 static const u32 CGA_ODD = 0xB8002000L;
-static u32 ADDR[2];
+static const u32 ADDR[] = {0xB8000000L, 0xB8002000L};
 
 
 static void set_video_mode(u8 mode);
@@ -124,9 +124,6 @@ static void draw_text_base(
 
 
 void init_graphics(CGAPalette palette) {
-
-    ADDR[0] = CGA_EVEN;
-    ADDR[1] = CGA_ODD;
 
     set_video_mode(5);
     set_palette(palette);

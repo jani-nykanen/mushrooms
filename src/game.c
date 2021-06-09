@@ -127,7 +127,6 @@ static void draw_stage_borders() {
 // In the case that the player is "looping"
 static void draw_overlaying_frame() {
 
-    i16 i;
     i16 w = game->stage->width * 4; 
     i16 h = game->stage->height * 16;
 

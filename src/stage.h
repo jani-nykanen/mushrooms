@@ -34,4 +34,6 @@ void stage_parse_objects(Stage* stage, void* pplayer);
 
 bool stage_can_be_moved_to(Stage* stage, i16 x, i16 y, i16 dirx, i16 diry);
 
+bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y, i16* dirx, i16* diry);
+
 #endif // __STAGE__

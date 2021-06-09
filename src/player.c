@@ -33,6 +33,7 @@ Player* new_player(i16 x, i16 y,
 
     player->animationFrame = 1;
     player->animationRow = 0;
+    player->animate = true;
 
     player->loopx = 0;
     player->loopy = 0;
@@ -80,7 +81,7 @@ static void player_control(Player* player, Stage* stage, i16 step) {
     i16 dirx = 0;
     i16 diry = 0;
     Vector2 target;
-    i16 animationRow;
+    i16 animationRow = player->animationRow;
 
     if (player->moving) {
 
@@ -97,25 +98,48 @@ static void player_control(Player* player, Stage* stage, i16 step) {
     else if (player->getTurnTime() > 0)
         return;
 
-    if (keyb_get_ext_key(KEY_UP) & STATE_DOWN_OR_PRESSED) {
+    player->animate = true;
 
-        diry = -1;
-        animationRow = 1;
+    if (stage_check_underlying_tile(stage, 
+        player->pos.x, player->pos.y,
+        &dirx, &diry)) {
+
+        if (!stage_can_be_moved_to(stage, 
+            player->pos.x + dirx, 
+            player->pos.y + diry, 
+            dirx, diry)) {
+
+            dirx = 0;
+            diry = 0;
+        }
+        else {
+
+            player->animate = false;
+        }
     }
-    else if (keyb_get_ext_key(KEY_DOWN) & STATE_DOWN_OR_PRESSED) {
 
-        diry = 1;
-        animationRow = 0;
-    }
-    else if (keyb_get_ext_key(KEY_LEFT) & STATE_DOWN_OR_PRESSED) {
+    if (dirx == 0 && diry == 0) {
 
-        dirx = -1;
-        animationRow = 3;
-    }
-    else if (keyb_get_ext_key(KEY_RIGHT) & STATE_DOWN_OR_PRESSED) {
+        if (keyb_get_ext_key(KEY_UP) & STATE_DOWN_OR_PRESSED) {
 
-        dirx = 1;
-        animationRow = 2;
+            diry = -1;
+            animationRow = 1;
+        }
+        else if (keyb_get_ext_key(KEY_DOWN) & STATE_DOWN_OR_PRESSED) {
+
+            diry = 1;
+            animationRow = 0;
+        }
+        else if (keyb_get_ext_key(KEY_LEFT) & STATE_DOWN_OR_PRESSED) {
+
+            dirx = -1;
+            animationRow = 3;
+        }
+        else if (keyb_get_ext_key(KEY_RIGHT) & STATE_DOWN_OR_PRESSED) {
+
+            dirx = 1;
+            animationRow = 2;
+        }
     }
 
     target = vec2(player->pos.x + dirx, player->pos.y + diry);
@@ -161,12 +185,15 @@ static void player_animate(Player* player, Stage* stage, i16 step) {
     i16 turnTime = GAME_TURN_TIME - player->getTurnTime();
 
     if (!player->moving) return;
+    
+    if (player->animate) {
 
-    player->animationTimer += step; 
-    if (player->animationTimer >= FRAME_TIME) {
+        player->animationTimer += step; 
+        if (player->animationTimer >= FRAME_TIME) {
 
-        player->animationTimer -= FRAME_TIME;
-        player->animationFrame = (player->animationFrame + 1) % 4;
+            player->animationTimer -= FRAME_TIME;
+            player->animationFrame = (player->animationFrame + 1) % 4;
+        }
     }
 
     player->renderPos.x = player->pos.x*16 + 
