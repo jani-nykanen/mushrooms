@@ -169,14 +169,16 @@ static void game_redraw() {
         game->backgroundDrawn = true;
     }
 
+    player_pre_draw(game->player, game->stage);
     stage_draw(game->stage, game->bmpTileset);
-
     player_draw(game->player, game->stage, game->bmpSprites);
 
     if (game->player->loopx != 0 || game->player->loopy != 0) {
 
         draw_overlaying_frame();
     }
+
+    stage_clear_redraw_buffer(game->stage);
 }
 
 

@@ -5,7 +5,7 @@
 #include "types.h"
 
 
-#define GAME_TURN_TIME  16
+#define GAME_TURN_TIME 16
 
 
 i16 init_game_scene();

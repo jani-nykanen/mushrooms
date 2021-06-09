@@ -110,6 +110,15 @@ void stage_mark_for_redraw(Stage* stage, i16 x, i16 y) {
 }
 
 
+bool stage_does_redraw(Stage* stage, i16 x, i16 y) {
+
+    x = neg_mod(x, stage->width);
+    y = neg_mod(y, stage->height);
+
+    return stage->redrawBuffer[y * stage->width + x];
+}
+
+
 void stage_draw(Stage* stage, Bitmap* bmpTileset) {
 
     static const i16 TILE_INDEX[] = {
@@ -134,8 +143,6 @@ void stage_draw(Stage* stage, Bitmap* bmpTileset) {
                 dx = stage->topCorner.x + x*16;
                 dy = stage->topCorner.y + y*16;
 
-                stage->redrawBuffer[index] = 0;
-
                 tile = stage->staticLayer[index];
                 if (tile == 0) {
 
@@ -150,6 +157,12 @@ void stage_draw(Stage* stage, Bitmap* bmpTileset) {
             }
         }
     }
+}
+
+
+void stage_clear_redraw_buffer(Stage* stage) {
+
+    memset(stage->redrawBuffer, 0, stage->width*stage->height);
 }
 
 
@@ -266,28 +279,38 @@ bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y,
     i16* dirx, i16* diry) {
 
     u8 tile;
+    i16 index;
 
     x = neg_mod(x, stage->width);
     y = neg_mod(y, stage->height);
 
-    tile = stage->staticLayer[y * stage->width + x];
+    index = y * stage->width + x;
+    tile = stage->staticLayer[index];
 
     // Arrows
     if (tile >= MIN_ARROW_INDEX && tile < MIN_ARROW_INDEX + 4) {
 
         *dirx = X_DIR[tile - MIN_ARROW_INDEX];
         *diry = Y_DIR[tile - MIN_ARROW_INDEX];
+
+        return (*dirx) != 0 || (*diry) != 0;
     }
     // Button to toggle walls on/off
     else if (tile == 6) {
 
-        toggle_special_walls(stage, y * stage->width + x);
+        toggle_special_walls(stage, index);
     }
     // Button to swap arrows
     else if (tile == 7) {
 
-        reverse_arrow_tiles(stage, y * stage->width + x);
+        reverse_arrow_tiles(stage, index);
+    }
+    // Apple, eat it!
+    else if (tile == 3) {
+
+        stage->staticLayer[index] = 0;
+        return 2;
     }
 
-    return (*dirx) != 0 || (*diry) != 0;
+    return 0;
 }

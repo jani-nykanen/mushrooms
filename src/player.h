@@ -6,6 +6,7 @@
 #include "stage.h"
 
 
+
 typedef struct {
 
     Vector2 pos;
@@ -26,6 +27,10 @@ typedef struct {
     i8 loopx;
     i8 loopy;
 
+    Vector2* mushrooms;
+    i16 mushroomCount;
+    bool redrawMushrooms;
+
 } Player;
 
 
@@ -37,7 +42,9 @@ void dispose_player(Player* player);
 void player_set_starting_position(Player* player, i16 x, i16 y);
 
 void player_update(Player* player, Stage* stage, i16 step);
+void player_pre_draw(Player* player, Stage* stage);
 void player_draw(Player* player, Stage* stage, Bitmap* bmpSprites);
 
+bool player_mushroom_in_tile(Player* player, Stage* stage, i16 x, i16 y);
 
 #endif // __PLAYER__

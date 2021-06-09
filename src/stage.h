@@ -28,7 +28,10 @@ Stage* new_stage(const str mapPackPath, i16 initialMapIndex);
 void dispose_stage(Stage* stage);
 
 void stage_draw(Stage* stage, Bitmap* bmpTileset);
+void stage_clear_redraw_buffer(Stage* stage);
+
 void stage_mark_for_redraw(Stage* stage, i16 x, i16 y);
+bool stage_does_redraw(Stage* stage, i16 x, i16 y);
 
 void stage_parse_objects(Stage* stage, void* pplayer);
 

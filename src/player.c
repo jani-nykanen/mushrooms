@@ -10,6 +10,9 @@
 #include <stdlib.h>
 
 
+static const i16 MAX_MUSHROOMS = 16;
+
+
 Player* new_player(i16 x, i16 y, 
     void (*playTurn) (void), 
     i16 (*getTurnTime) (void)) {
@@ -38,6 +41,19 @@ Player* new_player(i16 x, i16 y,
     player->loopx = 0;
     player->loopy = 0;
 
+    player->mushrooms = (Vector2*) calloc(MAX_MUSHROOMS, sizeof(Vector2));
+    if (player->mushrooms == NULL) {
+
+        free(player);
+
+        ERROR_MALLOC();
+        return NULL;
+    }
+    player->mushroomCount = 1;
+    player->mushrooms[0] = player->pos;
+    player->redrawMushrooms = false;
+
+
     return player;
 }
 
@@ -46,6 +62,7 @@ void dispose_player(Player* player) {
     
     if (player == NULL) return;
 
+    free(player->mushrooms);
     free(player);
 }
 
@@ -55,6 +72,41 @@ void player_set_starting_position(Player* player, i16 x, i16 y) {
     player->pos = vec2(x, y);
     player->target = player->pos;
     player->renderPos = vec2(x*16, y*16);
+}
+
+
+static bool player_check_if_solid(Player* player, Stage* stage, i16 dx, i16 dy, i16 dirx, i16 diry) {
+
+    return stage_can_be_moved_to(stage, dx, dy, dirx, diry) &&
+           !player_mushroom_in_tile(player, stage, dx, dy);
+}
+
+
+static void player_shift_mushrooms(Player* player, Stage* stage) {
+
+    Vector2 previous[2];
+    i16 pointer = 0;
+    i16 i;
+
+    if (player->mushroomCount == 0) return;
+
+    i = player->mushroomCount-1;
+    stage_mark_for_redraw(stage, 
+        player->mushrooms[i].x,
+        player->mushrooms[i].y);
+
+    previous[0] = player->mushrooms[0];
+    player->mushrooms[0] = player->pos;
+
+    for (i = 1; i < player->mushroomCount; ++ i) {
+
+        previous[!pointer] = player->mushrooms[i];
+        player->mushrooms[i] = previous[pointer];
+
+        pointer = !pointer;
+    }
+
+    player->redrawMushrooms = true;
 }
 
 
@@ -72,7 +124,17 @@ static void player_stop_moving(Player* player, Stage* stage) {
 
     player->loopx = 0;
     player->loopy = 0;
-    
+
+    player_shift_mushrooms(player, stage);
+}
+
+
+static void player_add_mushroom(Player* player) {
+
+    if (player->mushroomCount == MAX_MUSHROOMS) return;
+
+    ++ player->mushroomCount;
+    player->mushrooms[player->mushroomCount-1] = player->mushrooms[player->mushroomCount-2];
 }
 
 
@@ -82,6 +144,8 @@ static void player_control(Player* player, Stage* stage, i16 step) {
     i16 diry = 0;
     Vector2 target;
     i16 animationRow = player->animationRow;
+    bool stopped = false;
+    i16 ret;
 
     if (player->moving) {
 
@@ -89,6 +153,7 @@ static void player_control(Player* player, Stage* stage, i16 step) {
         if (player->getTurnTime() <= 0) {
 
             player_stop_moving(player, stage);
+            stopped = true;
         }
         else {
 
@@ -100,21 +165,30 @@ static void player_control(Player* player, Stage* stage, i16 step) {
 
     player->animate = true;
 
-    if (stage_check_underlying_tile(stage, 
-        player->pos.x, player->pos.y,
-        &dirx, &diry)) {
+    if (stopped) {
 
-        if (!stage_can_be_moved_to(stage, 
-            player->pos.x + dirx, 
-            player->pos.y + diry, 
-            dirx, diry)) {
+        ret = stage_check_underlying_tile(stage, 
+            player->pos.x, player->pos.y,
+            &dirx, &diry);
 
-            dirx = 0;
-            diry = 0;
+        if (ret == 1) {
+
+            if (!player_check_if_solid(player, stage, 
+                player->pos.x + dirx, 
+                player->pos.y + diry, 
+                dirx, diry)) {
+
+                dirx = 0;
+                diry = 0;
+            }
+            else {
+
+                player->animate = false;
+            }
         }
-        else {
+        else if (ret == 2) {
 
-            player->animate = false;
+            player_add_mushroom(player);
         }
     }
 
@@ -145,7 +219,7 @@ static void player_control(Player* player, Stage* stage, i16 step) {
     target = vec2(player->pos.x + dirx, player->pos.y + diry);
 
     if ((dirx != 0 || diry != 0) && 
-        stage_can_be_moved_to(stage, 
+        player_check_if_solid(player, stage, 
             target.x, target.y, dirx, diry)) {
 
         player->target = target;
@@ -214,6 +288,67 @@ void player_update(Player* player, Stage* stage, i16 step) {
 }
 
 
+static void player_draw_mushrooms(Player* player, Stage* stage, Bitmap* bmpSprites) {
+
+    i16 i;
+    i16 frame;
+    i16 end;
+
+    if (player->mushroomCount <= 1) return;
+
+    // Static mushrooms
+    if (player->redrawMushrooms) {
+
+        end = player->mushroomCount - (i16)(player->moving);
+        for (i = 1; i < end; ++ i) {
+
+            if (stage_does_redraw(stage, player->mushrooms[i].x, player->mushrooms[i].y)) {
+
+                draw_sprite(bmpSprites, 14, 
+                    stage->topCorner.x + player->mushrooms[i].x*16,
+                    stage->topCorner.y + player->mushrooms[i].y*16);
+            }
+        }
+        
+        player->redrawMushrooms = false;
+    }
+
+    if (player->moving) {
+
+        // Disappearing mushrom
+        frame = min_i16(player->getTurnTime()/4 + 1, 3);
+    
+        i = player->mushroomCount-1;
+        draw_sprite(bmpSprites, 11 + frame,
+            stage->topCorner.x + player->mushrooms[i].x*16,
+            stage->topCorner.y + player->mushrooms[i].y*16);
+
+         // Appearing mushroom
+        frame = min_i16(4 - player->getTurnTime()/4, 3);
+    
+        draw_sprite(bmpSprites, 11 + frame,
+            stage->topCorner.x + player->pos.x*16,
+            stage->topCorner.y + player->pos.y*16);
+    }
+}
+
+
+void player_pre_draw(Player* player, Stage* stage) {
+
+    i16 i = player->mushroomCount-1;
+
+    if (player->mushroomCount <= 1) return;
+
+    if (player->redrawMushrooms || player->moving) {
+
+        stage_mark_for_redraw(stage, 
+            player->mushrooms[i].x, 
+            player->mushrooms[i].y);
+        
+    }
+}
+
+
 void player_draw(Player* player, Stage* stage, Bitmap* bmpSprites) {
 
     i16 frame;
@@ -229,6 +364,8 @@ void player_draw(Player* player, Stage* stage, Bitmap* bmpSprites) {
         
     dx = stage->topCorner.x + player->renderPos.x;
     dy = stage->topCorner.y + player->renderPos.y;
+
+    player_draw_mushrooms(player, stage, bmpSprites);
 
     draw_sprite(bmpSprites, player->animationRow*3 + frame, dx, dy);
 
@@ -249,4 +386,23 @@ void player_draw(Player* player, Stage* stage, Bitmap* bmpSprites) {
             stage->topCorner.y + player->pos.y*16 + player->loopy * stage->height * 16,
             4, 16, 0);
     }
+}
+
+
+bool player_mushroom_in_tile(Player* player, Stage* stage, i16 x, i16 y) {
+
+    i16 i;
+
+    x = neg_mod(x, stage->width);
+    y = neg_mod(y, stage->height);
+
+    for (i = 0; i < player->mushroomCount; ++ i) {
+
+        if (player->mushrooms[i].x == x &&
+            player->mushrooms[i].y == y) {
+
+            return true;
+        }
+    }
+    return false;
 }
