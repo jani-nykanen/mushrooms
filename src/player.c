@@ -89,12 +89,6 @@ void player_set_starting_position(Player* player, i16 x, i16 y) {
 }
 
 
-static bool player_check_if_solid(Player* player, Stage* stage, i16 dx, i16 dy, i16 dirx, i16 diry) {
-
-    return stage_can_be_moved_to(stage, dx, dy, dirx, diry) &&
-           !player_mushroom_in_tile(player, stage, dx, dy);
-}
-
 
 static void player_shift_mushrooms(Player* player, Stage* stage) {
 
@@ -103,6 +97,10 @@ static void player_shift_mushrooms(Player* player, Stage* stage) {
     i16 i;
 
     if (player->mushroomCount == 0) return;
+
+    stage_mark_solid(stage, 
+        player->mushrooms[player->mushroomCount-1].x,
+        player->mushrooms[player->mushroomCount-1].y, 0);
 
     i = player->mushroomCount-1;
     stage_mark_for_redraw(stage, 
@@ -120,7 +118,15 @@ static void player_shift_mushrooms(Player* player, Stage* stage) {
         pointer = !pointer;
     }
 
-    player->redrawMushrooms = true;
+    if (player->mushroomCount > 1)
+        player->redrawMushrooms = true;
+
+    for (i = 0; i < player->mushroomCount; ++ i) {
+
+        stage_mark_solid(stage, 
+            player->mushrooms[i].x,
+            player->mushrooms[i].y, 1);
+    }
 }
 
 
@@ -187,7 +193,7 @@ static void player_control(Player* player, Stage* stage, i16 step) {
 
         if (ret == 1) {
 
-            if (!player_check_if_solid(player, stage, 
+            if (!stage_can_be_moved_to(stage, 
                 player->pos.x + dirx, 
                 player->pos.y + diry, 
                 dirx, diry)) {
@@ -233,7 +239,7 @@ static void player_control(Player* player, Stage* stage, i16 step) {
     target = vec2(player->pos.x + dirx, player->pos.y + diry);
 
     if ((dirx != 0 || diry != 0) && 
-        player_check_if_solid(player, stage, 
+        stage_can_be_moved_to(stage, 
             target.x, target.y, dirx, diry)) {
 
         player->target = target;
@@ -392,21 +398,3 @@ void player_draw(Player* player, Stage* stage, Bitmap* bmpSprites) {
     }
 }
 
-
-bool player_mushroom_in_tile(Player* player, Stage* stage, i16 x, i16 y) {
-
-    i16 i;
-
-    x = neg_mod(x, stage->width);
-    y = neg_mod(y, stage->height);
-
-    for (i = 0; i < player->mushroomCount; ++ i) {
-
-        if (player->mushrooms[i].x == x &&
-            player->mushrooms[i].y == y) {
-
-            return true;
-        }
-    }
-    return false;
-}

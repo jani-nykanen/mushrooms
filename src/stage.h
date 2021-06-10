@@ -14,6 +14,7 @@ typedef struct {
 
     u8* staticLayer;
     u8* redrawBuffer;
+    u8* solidMap;
 
     u16 width;
     u16 height;
@@ -45,7 +46,8 @@ bool stage_does_redraw(Stage* stage, i16 x, i16 y);
 void stage_parse_objects(Stage* stage, void* pplayer);
 
 bool stage_can_be_moved_to(Stage* stage, i16 x, i16 y, i16 dirx, i16 diry);
-
 bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y, i16* dirx, i16* diry);
+
+void stage_mark_solid(Stage* stage, i16 x, i16 y, u8 state);
 
 #endif // __STAGE__

@@ -10,6 +10,11 @@
 #include <string.h>
 
 
+#define SOLID_TILES_LENGTH 2
+
+static const u8 SOLID_TILES[] = {1, 5};
+
+
 static const u8 MIN_ARROW_INDEX = 8;
 static const i16 X_DIR[] = {0, 0, 1, -1};
 static const i16 Y_DIR[] = {-1, 1, 0, 0};
@@ -65,9 +70,26 @@ static void set_static_layer(u8* dest, Tilemap* tmap) {
 }
 
 
+static void compute_initial_solid_map(Stage* stage) {
+
+    i16 i, j;
+
+    for (i = 0; i < stage->width*stage->height; ++ i) {
+
+        for (j = 0; j < SOLID_TILES_LENGTH; ++ j) {
+
+            if (SOLID_TILES[j] == stage->activeMap->data[i]) {
+
+                stage->solidMap[i] = 1;
+                break;
+            }
+        }
+    }
+}
+
+
 static u8* copy_static_layer(Tilemap* tmap) {
 
-    i16 i;
     u8* data = (u8*) malloc(tmap->width*tmap->height);
     if (data == NULL) {
 
@@ -78,6 +100,7 @@ static u8* copy_static_layer(Tilemap* tmap) {
 
     return data;
 }
+
 
 
 Stage* new_stage(const str mapPackPath, i16 initialMapIndex) {
@@ -107,8 +130,8 @@ Stage* new_stage(const str mapPackPath, i16 initialMapIndex) {
     if (stage->staticLayer == NULL) {
 
         dispose_tilemap_pack(stage->mapPack);
-
         free(stage);
+
         return NULL;
     }
 
@@ -116,13 +139,20 @@ Stage* new_stage(const str mapPackPath, i16 initialMapIndex) {
     if (stage->redrawBuffer == NULL) {
 
         ERROR_MALLOC();
+        dispose_stage(stage);
 
-        dispose_tilemap_pack(stage->mapPack);
-
-        free(stage->staticLayer);
-        free(stage);
         return NULL;
     }
+
+    stage->solidMap = (u8*) calloc(stage->width*stage->height, 1);
+    if (stage->solidMap == NULL) {
+
+        ERROR_MALLOC();
+        dispose_stage(stage);
+
+        return NULL;
+    }
+    compute_initial_solid_map(stage);
 
     memset(stage->redrawBuffer, 1, stage->width*stage->height);
 
@@ -144,8 +174,13 @@ void dispose_stage(Stage* stage) {
     if (stage == NULL) return;
 
     dispose_tilemap_pack(stage->mapPack);
-    free(stage->activeMap);
-    free(stage->redrawBuffer);
+
+    if (stage->activeMap != NULL)
+        free(stage->activeMap);
+    if (stage->redrawBuffer != NULL)
+        free(stage->redrawBuffer);
+    if (stage->solidMap != NULL)
+        free(stage->solidMap);
     free(stage);
 }
 
@@ -157,6 +192,9 @@ void stage_reset(Stage* stage) {
     memset(stage->redrawBuffer, 1, stage->width*stage->height);
 
     stage->foodLeft = compute_food(stage->activeMap);
+
+    memset(stage->solidMap, 0, stage->width*stage->height);
+    compute_initial_solid_map(stage);
 }
 
 
@@ -265,38 +303,27 @@ void stage_parse_objects(Stage* stage, void* pplayer) {
 
 bool stage_can_be_moved_to(Stage* stage, i16 x, i16 y, i16 dirx, i16 diry) {
 
-    #define SOLID_TILES_LENGTH 2
-
-    static const u8 SOLID_TILES[] = {1, 5};
-
     u8 tile;
     i16 i;
 
     x = neg_mod(x, stage->width);
     y = neg_mod(y, stage->height);
 
-    tile = stage->staticLayer[y * stage->width + x];
+    i = y * stage->width + x;
+    if (stage->solidMap[i] == 1)
+        return false;
 
-    for (i = 0; i < SOLID_TILES_LENGTH; ++ i) {
+    tile = stage->staticLayer[i];
+    if (tile >= MIN_ARROW_INDEX && tile < MIN_ARROW_INDEX + 4) {
 
-        if (SOLID_TILES[i] == tile) {
-
-            return false;
-        }
-
-        if (tile >= MIN_ARROW_INDEX && tile < MIN_ARROW_INDEX + 4) {
-
-            if ((dirx * X_DIR[tile - MIN_ARROW_INDEX] < 0) ||
+        if ((dirx * X_DIR[tile - MIN_ARROW_INDEX] < 0) ||
                 (diry * Y_DIR[tile - MIN_ARROW_INDEX] < 0)) {
 
-                return false;
-            }
+            return false;
         }
     }
 
     return true;
-
-    #undef SOLID_TILES_LENGTH
 }
 
 
@@ -310,11 +337,15 @@ static void toggle_special_walls(Stage* stage, i16 j) {
 
             stage->staticLayer[i] = 5;
             stage->redrawBuffer[i] = true;
+
+            stage->solidMap[i] = true;
         }
         else if (stage->staticLayer[i] == 5) {
 
             stage->staticLayer[i] = 4;
             stage->redrawBuffer[i] = true;
+
+            stage->solidMap[i] = false;
         }
         else if (stage->staticLayer[i] == 17) {
 
@@ -393,4 +424,13 @@ bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y,
     }
 
     return 0;
+}
+
+
+void stage_mark_solid(Stage* stage, i16 x, i16 y, u8 state) {
+
+    x = neg_mod(x, stage->width);
+    y = neg_mod(y, stage->height);
+
+    stage->solidMap[y * stage->width + x] = state;
 }

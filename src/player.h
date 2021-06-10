@@ -45,6 +45,4 @@ void player_update(Player* player, Stage* stage, i16 step);
 void player_pre_draw(Player* player, Stage* stage);
 void player_draw(Player* player, Stage* stage, Bitmap* bmpSprites);
 
-bool player_mushroom_in_tile(Player* player, Stage* stage, i16 x, i16 y);
-
 #endif // __PLAYER__

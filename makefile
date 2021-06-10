@@ -24,3 +24,6 @@ tilemaps:
 	./tools/bin/tmx2bin output/LEVELS1.DAT dev/maps/1.tmx 
 
 assets: bitmaps tilemaps
+
+run:
+	(cd output; dosbox game.exe)
