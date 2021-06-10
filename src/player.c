@@ -72,6 +72,20 @@ void player_set_starting_position(Player* player, i16 x, i16 y) {
     player->pos = vec2(x, y);
     player->target = player->pos;
     player->renderPos = vec2(x*16, y*16);
+
+    player->mushroomCount = 1;
+    player->mushrooms[0] = player->pos;
+    player->redrawMushrooms = false;
+
+    player->animationFrame = 1;
+    player->animationRow = 0;
+    player->animate = true;
+
+    player->redraw = true;
+    player->moving = false;
+
+    player->loopx = 0;
+    player->loopy = 0;
 }
 
 
@@ -375,16 +389,6 @@ void player_draw(Player* player, Stage* stage, Bitmap* bmpSprites) {
             player->animationRow*3 + frame,
             dx + player->loopx * stage->width * 16,
             dy + player->loopy * stage->height * 16);
-
-        fill_rect_fast(
-            stage->topCorner.x/4 + player->target.x*4,
-            stage->topCorner.y + player->target.y*16,
-            4, 16, 0);
-
-        fill_rect_fast(
-            stage->topCorner.x/4 + player->pos.x*4 + player->loopx * stage->width * 4,
-            stage->topCorner.y + player->pos.y*16 + player->loopy * stage->height * 16,
-            4, 16, 0);
     }
 }
 

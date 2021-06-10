@@ -14,6 +14,56 @@ static const u8 MIN_ARROW_INDEX = 8;
 static const i16 X_DIR[] = {0, 0, 1, -1};
 static const i16 Y_DIR[] = {-1, 1, 0, 0};
 
+static const i16 START_POS_ANIM_FRAME = 10;
+
+
+static i16 compute_food(Tilemap* tmap) {
+
+    i16 i;
+    i16 count = 0;
+
+    for (i = 0; i < tmap->width*tmap->height; ++ i) {
+
+        if (tmap->data[i] == 3) {
+
+            ++ count;
+        }
+    }
+    return count;
+}
+
+
+static Vector2 find_start_pos(Tilemap* tmap) {
+
+    i16 x, y;
+
+    for (x = 0; x < tmap->width; ++ x) {
+
+        for (y = 0; y < tmap->height; ++ y) {
+
+            if (tmap->data[y * tmap->width + x] == 2) {
+
+                return vec2(x, y);
+            }
+        }
+    }
+    return vec2(-1, -1);
+}
+
+
+static void set_static_layer(u8* dest, Tilemap* tmap) {
+
+    i16 i;
+
+    for (i = 0; i < tmap->width*tmap->height; ++ i) {
+
+        if (dest[i] == 2)
+            dest[i] = 0;
+        else
+            dest[i] = tmap->data[i];
+    }
+}
+
 
 static u8* copy_static_layer(Tilemap* tmap) {
 
@@ -24,13 +74,7 @@ static u8* copy_static_layer(Tilemap* tmap) {
         ERROR_MALLOC();
         return NULL;
     }
-    for (i = 0; i < tmap->width*tmap->height; ++ i) {
-
-        if (data[i] == 2)
-            data[i] = 0;
-        else
-            data[i] = tmap->data[i];
-    }
+    set_static_layer(data, tmap);
 
     return data;
 }
@@ -86,6 +130,11 @@ Stage* new_stage(const str mapPackPath, i16 initialMapIndex) {
         160 - stage->width*8,
         100 - stage->height*8);
 
+    stage->startPos = find_start_pos(stage->activeMap);
+    stage->startPosAnimTimer = 0;
+
+    stage->foodLeft = compute_food(stage->activeMap);
+
     return stage;
 }
 
@@ -98,6 +147,25 @@ void dispose_stage(Stage* stage) {
     free(stage->activeMap);
     free(stage->redrawBuffer);
     free(stage);
+}
+
+
+void stage_reset(Stage* stage) {
+
+    set_static_layer(stage->staticLayer, stage->activeMap);
+
+    memset(stage->redrawBuffer, 1, stage->width*stage->height);
+
+    stage->foodLeft = compute_food(stage->activeMap);
+}
+
+
+void stage_update(Stage* stage, i16 step) {
+
+    if ((stage->startPosAnimTimer += step) >= START_POS_ANIM_FRAME*2) {
+
+        stage->startPosAnimTimer -= START_POS_ANIM_FRAME*2;
+    } 
 }
 
 
@@ -156,6 +224,16 @@ void stage_draw(Stage* stage, Bitmap* bmpTileset) {
                 }
             }
         }
+    }
+
+    // "Goal"
+    if (stage->foodLeft <= 0) {
+
+        index = stage->startPosAnimTimer / START_POS_ANIM_FRAME;
+
+        draw_sprite_fast(bmpTileset, 13 + index, 
+            stage->topCorner.x/4 + stage->startPos.x*4,
+            stage->topCorner.y + stage->startPos.y*16);
     }
 }
 
@@ -309,6 +387,8 @@ bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y,
     else if (tile == 3) {
 
         stage->staticLayer[index] = 0;
+        -- stage->foodLeft;
+
         return 2;
     }
 

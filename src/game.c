@@ -5,6 +5,8 @@
 #include "err.h"
 #include "stage.h"
 #include "player.h"
+#include "keyb.h"
+#include "keycodes.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -80,13 +82,29 @@ static i16 game_init() {
 }
 
 
+static void reset_game() {
+
+    stage_reset(game->stage);
+    stage_parse_objects(game->stage, (void*)game->player);
+
+    game->turnTimer = 0;
+}
+
+
 static i16 game_update(i16 step) {
+
+    if (keyb_get_normal_key(KEY_R) == STATE_PRESSED) {
+
+        reset_game();
+        return 0;
+    }
 
     if (game->turnTimer > 0) {
 
         game->turnTimer -= step;
     }
 
+    stage_update(game->stage, step);
     player_update(game->player, game->stage, step);
 
     return 0;
@@ -96,31 +114,31 @@ static i16 game_update(i16 step) {
 static void draw_stage_borders() {
 
     i16 i;
-    i16 w = game->stage->width * 2; 
-    i16 h = game->stage->height * 2;
+    i16 w = game->stage->width; 
+    i16 h = game->stage->height;
 
 	i16 tx = game->stage->topCorner.x / 4;
 	i16 ty = game->stage->topCorner.y;
 
     for (i = 0; i < w; ++ i) {
 
-        draw_sprite_fast(game->bmpIcons, 0, tx + i*2, ty-8);
+        draw_sprite_fast(game->bmpIcons, 0, tx + i*4, ty-16);
 
-        draw_sprite_fast(game->bmpIcons, 2, tx + i*2, ty + h*8);   
+        draw_sprite_fast(game->bmpIcons, 2, tx + i*4, ty + h*16);   
     }
 
     for (i = 0; i < h; ++ i) {
 
-        draw_sprite_fast(game->bmpIcons, 1, tx - 2, ty + i*8);
+        draw_sprite_fast(game->bmpIcons, 1, tx - 4, ty + i*16);
 
-        draw_sprite_fast(game->bmpIcons, 3, tx + w*2, ty + i*8);
+        draw_sprite_fast(game->bmpIcons, 3, tx + w*4, ty + i*16);
     }
 
     // Corners
-    draw_sprite_fast(game->bmpIcons, 4, tx - 2, ty-8);
-    draw_sprite_fast(game->bmpIcons, 5, tx + w*2, ty-8);
-    draw_sprite_fast(game->bmpIcons, 6, tx - 2, ty + h*8);
-    draw_sprite_fast(game->bmpIcons, 7, tx + w*2, ty + h*8);
+    draw_sprite_fast(game->bmpIcons, 4, tx - 4, ty-16);
+    draw_sprite_fast(game->bmpIcons, 5, tx + w*4, ty-16);
+    draw_sprite_fast(game->bmpIcons, 6, tx - 4, ty + h*16);
+    draw_sprite_fast(game->bmpIcons, 7, tx + w*4, ty + h*16);
 }
 
 
@@ -137,22 +155,16 @@ static void draw_overlaying_frame() {
 
         ty += game->player->target.y*16;
 
-        draw_sprite_fast(game->bmpIcons, 1, tx - 2, ty);
-        draw_sprite_fast(game->bmpIcons, 1, tx - 2, ty + 8);
-
+        draw_sprite_fast(game->bmpIcons, 1, tx - 4, ty);
         draw_sprite_fast(game->bmpIcons, 3, tx + w, ty);
-        draw_sprite_fast(game->bmpIcons, 3, tx + w, ty + 8);
     }
 
     if (game->player->loopy != 0) {
 
         tx += game->player->target.x*4;
 
-        draw_sprite_fast(game->bmpIcons, 0, tx,  ty - 8);
-        draw_sprite_fast(game->bmpIcons, 0, tx + 2, ty - 8);
-
+        draw_sprite_fast(game->bmpIcons, 0, tx, ty - 16);
         draw_sprite_fast(game->bmpIcons, 2, tx, ty + h);
-        draw_sprite_fast(game->bmpIcons, 2, tx + 2, ty + h);
     }
 }
 
