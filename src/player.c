@@ -53,7 +53,6 @@ Player* new_player(i16 x, i16 y,
     player->mushrooms[0] = player->pos;
     player->redrawMushrooms = false;
 
-
     return player;
 }
 
@@ -158,7 +157,7 @@ static void player_add_mushroom(Player* player) {
 }
 
 
-static void player_control(Player* player, Stage* stage, i16 step) {
+static u8 player_control(Player* player, Stage* stage, i16 step) {
 
     i16 dirx = 0;
     i16 diry = 0;
@@ -177,11 +176,11 @@ static void player_control(Player* player, Stage* stage, i16 step) {
         }
         else {
 
-            return;
+            return 0;
         }
     }
     else if (player->getTurnTime() > 0)
-        return;
+        return 0;
 
     player->animate = true;
 
@@ -210,10 +209,25 @@ static void player_control(Player* player, Stage* stage, i16 step) {
 
             player_add_mushroom(player);
         }
+        else if (ret == 3) {
+
+            return 2;
+        }
     }
 
     if (dirx == 0 && diry == 0) {
 
+        // Check if stuck
+        if (stopped &&
+            !stage_can_be_moved_to(stage, player->pos.x-1, player->pos.y, -1, 0) &&
+            !stage_can_be_moved_to(stage, player->pos.x+1, player->pos.y, 1, 0) &&
+            !stage_can_be_moved_to(stage, player->pos.x, player->pos.y-1, 0, -1) &&
+            !stage_can_be_moved_to(stage, player->pos.x, player->pos.y+1, 0, 1)) {
+
+            return 1;
+        }
+
+        // Check keyboard
         if (keyb_get_ext_key(KEY_UP) & STATE_DOWN_OR_PRESSED) {
 
             diry = -1;
@@ -269,6 +283,7 @@ static void player_control(Player* player, Stage* stage, i16 step) {
             player->loopy = -1;
     }
 
+    return 0;
 }
 
 
@@ -301,10 +316,16 @@ static void player_animate(Player* player, Stage* stage, i16 step) {
 }
 
 
-void player_update(Player* player, Stage* stage, i16 step) {
+u8 player_update(Player* player, Stage* stage, i16 step) {
     
-    player_control(player, stage, step);
+    u8 ret = player_control(player, stage, step);
+    if (ret > 0) {
+
+        return ret;
+    }
     player_animate(player, stage, step);
+
+    return 0;
 }
 
 

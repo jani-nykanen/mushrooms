@@ -422,6 +422,11 @@ bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y,
 
         return 2;
     }
+    // Portal
+    else if (tile == 2 && stage->foodLeft <= 0) {
+
+        return 3;
+    }
 
     return 0;
 }

@@ -28,6 +28,8 @@ typedef struct {
 
     i16 turnTimer;
 
+    u8 messageIndex;
+
 } GameScene;
 
 static GameScene* game;
@@ -78,6 +80,8 @@ static i16 game_init() {
     game->backgroundDrawn = false;
     game->turnTimer = 0;
 
+    game->messageIndex = 0;
+
     return 0;
 }
 
@@ -88,10 +92,24 @@ static void reset_game() {
     stage_parse_objects(game->stage, (void*)game->player);
 
     game->turnTimer = 0;
+    game->messageIndex = 0;
 }
 
 
 static i16 game_update(i16 step) {
+
+    static const i16 MESSAGE_TIME[] = {60, 120};
+
+    u8 ret;
+
+    if (game->messageIndex > 0) {
+
+        if ((game->turnTimer += step) >= MESSAGE_TIME[game->messageIndex-1]) {
+
+            reset_game();
+        }
+        return 0;
+    }
 
     if (keyb_get_normal_key(KEY_R) == STATE_PRESSED) {
 
@@ -105,7 +123,13 @@ static i16 game_update(i16 step) {
     }
 
     stage_update(game->stage, step);
-    player_update(game->player, game->stage, step);
+
+    ret = player_update(game->player, game->stage, step);
+    if (ret > 0) {
+
+        game->turnTimer = 0;
+        game->messageIndex = ret;
+    }
 
     return 0;
 }
@@ -169,7 +193,31 @@ static void draw_overlaying_frame() {
 }
 
 
+static void draw_message() {
+
+    static const str MESSAGES[] = {
+        "STUCK!",
+        "STAGE CLEAR!"
+    };
+
+    i16 len = (i16)strlen(MESSAGES[game->messageIndex-1]);
+
+    i16 x = 160 - len*4;
+    i16 y = 100 - 4;
+
+    fill_rect_fast(x/4 - 1, y - 2, len*2 + 2, 12, 0);
+    draw_text_fast(game->bmpFont, MESSAGES[game->messageIndex-1],
+        x/4, y, -1, false);
+}
+
+
 static void game_redraw() {
+
+    if (game->messageIndex > 0) {
+
+        draw_message();
+        return;
+    }
 
     if (!game->backgroundDrawn) {
         

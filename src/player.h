@@ -14,7 +14,6 @@ typedef struct {
     Vector2 renderPos;
 
     bool moving;
-    bool redraw;
 
     void (*playTurn) (void);
     i16 (*getTurnTime) (void);
@@ -22,7 +21,9 @@ typedef struct {
     i16 animationFrame;
     i16 animationTimer;
     i16 animationRow;
+
     bool animate;
+    bool redraw;
 
     i8 loopx;
     i8 loopy;
@@ -41,7 +42,7 @@ void dispose_player(Player* player);
 
 void player_set_starting_position(Player* player, i16 x, i16 y);
 
-void player_update(Player* player, Stage* stage, i16 step);
+u8 player_update(Player* player, Stage* stage, i16 step);
 void player_pre_draw(Player* player, Stage* stage);
 void player_draw(Player* player, Stage* stage, Bitmap* bmpSprites);
 
