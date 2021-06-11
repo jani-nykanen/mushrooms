@@ -7,6 +7,7 @@
 #include "player.h"
 #include "keyb.h"
 #include "keycodes.h"
+#include "mathext.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -29,6 +30,10 @@ typedef struct {
     i16 turnTimer;
 
     u8 messageIndex;
+    bool messageDrawn;
+
+    bool pauseMenuActive;
+    i16 cursorPos;
 
 } GameScene;
 
@@ -81,6 +86,8 @@ static i16 game_init() {
     game->turnTimer = 0;
 
     game->messageIndex = 0;
+    game->messageDrawn = false;
+    game->pauseMenuActive = false;
 
     return 0;
 }
@@ -96,6 +103,49 @@ static void reset_game() {
 }
 
 
+static i16 update_pause_menu() {
+
+    if (keyb_get_ext_key(KEY_UP) == STATE_PRESSED) {
+
+        -- game->cursorPos;
+    }
+    else if (keyb_get_ext_key(KEY_DOWN) == STATE_PRESSED) {
+
+        ++ game->cursorPos;
+    }
+    game->cursorPos = neg_mod(game->cursorPos, 4);
+
+    if (keyb_get_normal_key(KEY_RETURN) == STATE_PRESSED) {
+
+        switch (game->cursorPos) {
+
+        case 0:
+
+            game->pauseMenuActive = false;
+
+            stage_redraw_all(game->stage);
+            player_force_redraw(game->player);
+
+            break;
+
+        case 1:
+
+            game->pauseMenuActive = false;
+            reset_game();
+
+            break;
+
+        case 3:
+            return 1;
+
+        default: break;
+        }
+    }
+
+    return 0;
+}
+
+
 static i16 game_update(i16 step) {
 
     static const i16 MESSAGE_TIME[] = {60, 120};
@@ -108,6 +158,24 @@ static i16 game_update(i16 step) {
 
             reset_game();
         }
+        return 0;
+    }
+
+    if (game->pauseMenuActive) {
+
+        if (update_pause_menu()) {
+
+            return 1;
+        }
+        return 0;
+    }
+
+    if (keyb_get_normal_key(KEY_RETURN) == STATE_PRESSED) {
+
+        game->pauseMenuActive = true;
+        game->cursorPos = 0;
+        game->messageDrawn = false;
+
         return 0;
     }
 
@@ -129,6 +197,7 @@ static i16 game_update(i16 step) {
 
         game->turnTimer = 0;
         game->messageIndex = ret;
+        game->messageDrawn = false;
     }
 
     return 0;
@@ -211,11 +280,60 @@ static void draw_message() {
 }
 
 
+static void draw_pause_menu() {
+
+    static const str TEXT[] = {
+        "RESUME",
+        "RESTART",
+        "AUDIO: ON",
+        "QUIT"
+    };
+    static const i16 BOX_WIDTH = 24;
+    static const i16 BOX_HEIGHT = 52;
+
+    i16 i;
+    i16 x, y;
+
+    x = 40 - BOX_WIDTH/2;
+    y = 100 - BOX_HEIGHT/2 + 4;
+
+    if (!game->messageDrawn) {
+
+        fill_rect_fast(40 - BOX_WIDTH/2, 100 - BOX_HEIGHT/2, 
+            BOX_WIDTH, BOX_HEIGHT, 0);
+
+        for (i = 0; i < 4; ++ i) {
+            
+            draw_text_fast(game->bmpFont, TEXT[i],
+                x + 5, y + i * 12, -1, false);
+        }
+
+        game->messageDrawn = true;
+    }
+    
+    fill_rect_fast(40 - BOX_WIDTH/2, 100 - BOX_HEIGHT/2, 
+        4, BOX_HEIGHT, 0);
+
+    draw_text_fast(game->bmpFont, "\3\4",
+        x, y + game->cursorPos * 12, -1, false);
+}
+
+
 static void game_redraw() {
 
     if (game->messageIndex > 0) {
 
-        draw_message();
+        if (!game->messageDrawn) {
+            
+            draw_message(); 
+            game->messageDrawn = true;
+        }
+        return;
+    }
+
+    if (game->pauseMenuActive) {
+
+        draw_pause_menu();
         return;
     }
 
@@ -227,6 +345,7 @@ static void game_redraw() {
         draw_text_fast(game->bmpFont, "CGA DEMO 2", 2, 8, -1, false);
 
         game->backgroundDrawn = true;
+        return;
     }
 
     player_pre_draw(game->player, game->stage);

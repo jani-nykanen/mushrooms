@@ -46,4 +46,6 @@ u8 player_update(Player* player, Stage* stage, i16 step);
 void player_pre_draw(Player* player, Stage* stage);
 void player_draw(Player* player, Stage* stage, Bitmap* bmpSprites);
 
+void player_force_redraw(Player* player);
+
 #endif // __PLAYER__

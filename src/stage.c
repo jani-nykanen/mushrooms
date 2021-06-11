@@ -216,6 +216,12 @@ void stage_mark_for_redraw(Stage* stage, i16 x, i16 y) {
 }
 
 
+void stage_redraw_all(Stage* stage) {
+
+    memset(stage->redrawBuffer, 1, stage->width*stage->height);
+}
+
+
 bool stage_does_redraw(Stage* stage, i16 x, i16 y) {
 
     x = neg_mod(x, stage->width);

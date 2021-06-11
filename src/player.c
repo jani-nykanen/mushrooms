@@ -419,3 +419,9 @@ void player_draw(Player* player, Stage* stage, Bitmap* bmpSprites) {
     }
 }
 
+
+void player_force_redraw(Player* player) {
+
+    player->redraw = true;
+    player->redrawMushrooms = true;
+}
