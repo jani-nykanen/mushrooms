@@ -336,5 +336,19 @@ void draw_text(Bitmap* font, const str text,
 
     draw_text_base(draw_sprite,
         font, text, x, y, 
-        endIndex, center, 4);
+        endIndex, center, 1);
+}
+
+
+void draw_colored_text(Bitmap* font, const str text, 
+    i16 x, i16 y, bool center, u8 color) {
+
+    i16 dx = x;
+    if (center) {
+
+        dx -= (i16)strlen(text) * 4;
+    }
+
+    fill_rect(dx, y, (i16)strlen(text) * 8, 8, color);
+    draw_text(font, text, x, y, -1, center);
 }

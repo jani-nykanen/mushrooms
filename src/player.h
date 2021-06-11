@@ -31,6 +31,7 @@ typedef struct {
     Vector2* mushrooms;
     i16 mushroomCount;
     bool redrawMushrooms;
+    bool animateLastMushroom;
 
 } Player;
 

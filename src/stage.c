@@ -121,6 +121,7 @@ Stage* new_stage(const str mapPackPath, i16 initialMapIndex) {
         return NULL;
     }
 
+    stage->index = initialMapIndex;
     stage->activeMap = stage->mapPack->maps[initialMapIndex];
 
     stage->width = stage->activeMap->width;
@@ -339,19 +340,20 @@ static void toggle_special_walls(Stage* stage, i16 j) {
 
     for (i = 0; i < stage->width * stage->height; ++ i) {
 
-        if (stage->staticLayer[i] == 4) {
+        if (stage->staticLayer[i] == 4 &&
+            stage->solidMap[i] != 1) {
 
             stage->staticLayer[i] = 5;
             stage->redrawBuffer[i] = true;
 
-            stage->solidMap[i] = true;
+            stage->solidMap[i] = 1;
         }
         else if (stage->staticLayer[i] == 5) {
 
             stage->staticLayer[i] = 4;
             stage->redrawBuffer[i] = true;
 
-            stage->solidMap[i] = false;
+            stage->solidMap[i] = 0;
         }
         else if (stage->staticLayer[i] == 17) {
 

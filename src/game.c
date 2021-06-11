@@ -15,6 +15,12 @@
 
 
 
+static const str STAGE_TITLES[] = {
+    "\"TEST STAGE\""
+};
+
+
+
 typedef struct {
 
     Bitmap* bmpSprites;
@@ -319,6 +325,23 @@ static void draw_pause_menu() {
 }
 
 
+static void draw_stage_info() {
+
+    char buffer [10];
+
+    snprintf(buffer, 10, "LEVEL %d", (i16)game->stage->index+1);
+
+    draw_text_fast(game->bmpFont, buffer, 2, 8, -1, false);
+    draw_text_fast(game->bmpFont, "BEGINNER", 40, 8, -1, true);
+
+    draw_colored_text(game->bmpFont, STAGE_TITLES[game->stage->index], 
+        160, 200-16, true, 1);
+
+    draw_text_fast(game->bmpFont, "PASSWORD:", 80 - 18, 8, -1, false);
+    draw_colored_text(game->bmpFont, "123456", 320 - 64, 18, false, 1);
+}
+
+
 static void game_redraw() {
 
     if (game->messageIndex > 0) {
@@ -342,7 +365,7 @@ static void game_redraw() {
         clear_screen(0);
         draw_stage_borders();
 
-        draw_text_fast(game->bmpFont, "CGA DEMO 2", 2, 8, -1, false);
+        draw_stage_info();
 
         game->backgroundDrawn = true;
         return;

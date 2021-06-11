@@ -52,6 +52,7 @@ Player* new_player(i16 x, i16 y,
     player->mushroomCount = 1;
     player->mushrooms[0] = player->pos;
     player->redrawMushrooms = false;
+    player->animateLastMushroom = true;
 
     return player;
 }
@@ -75,6 +76,7 @@ void player_set_starting_position(Player* player, i16 x, i16 y) {
     player->mushroomCount = 1;
     player->mushrooms[0] = player->pos;
     player->redrawMushrooms = false;
+    player->animateLastMushroom = true;
 
     player->animationFrame = 1;
     player->animationRow = 0;
@@ -137,6 +139,8 @@ static void player_stop_moving(Player* player, Stage* stage) {
     player->target.x = neg_mod(player->target.x, stage->width);
     player->target.y = neg_mod(player->target.y, stage->height);
 
+    player->animateLastMushroom = true;
+
     player->moving = false;
     player->pos = player->target;
     player->renderPos = vec2(player->pos.x*16, player->pos.y*16); 
@@ -154,6 +158,8 @@ static void player_add_mushroom(Player* player) {
 
     ++ player->mushroomCount;
     player->mushrooms[player->mushroomCount-1] = player->mushrooms[player->mushroomCount-2];
+
+    player->animateLastMushroom = false;
 }
 
 
@@ -358,6 +364,10 @@ static void player_draw_mushrooms(Player* player, Stage* stage, Bitmap* bmpSprit
 
         // Disappearing mushrom
         frame = min_i16(player->getTurnTime()/4 + 1, 3);
+        if (!player->animateLastMushroom) {
+
+            frame = 3; 
+        }
     
         i = player->mushroomCount-1;
         draw_sprite(bmpSprites, 11 + frame,
@@ -366,7 +376,7 @@ static void player_draw_mushrooms(Player* player, Stage* stage, Bitmap* bmpSprit
 
          // Appearing mushroom
         frame = min_i16(4 - player->getTurnTime()/4, 3);
-    
+
         draw_sprite(bmpSprites, 11 + frame,
             stage->topCorner.x + player->pos.x*16,
             stage->topCorner.y + player->pos.y*16);

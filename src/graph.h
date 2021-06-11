@@ -33,5 +33,7 @@ void draw_text_fast(Bitmap* font, const str text,
     i16 x, i16 y, i16 endIndex, bool center);
 void draw_text(Bitmap* font, const str text, 
     i16 x, i16 y, i16 endIndex, bool center);
+void draw_colored_text(Bitmap* font, const str text, 
+    i16 x, i16 y, bool center, u8 color);
 
 #endif // __GRAPHICS__
