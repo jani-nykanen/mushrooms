@@ -390,6 +390,13 @@ bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y,
     u8 tile;
     i16 index;
 
+    if (stage->foodLeft <= 0 &&
+        x == stage->startPos.x &&
+        y == stage->startPos.y) {
+
+        return 3;
+    }
+
     x = neg_mod(x, stage->width);
     y = neg_mod(y, stage->height);
 
@@ -423,10 +430,14 @@ bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y,
         return 2;
     }
     // Portal
+    // (sometimes this does not work, maybe the tile value
+    // in the initial position is altered somehow?)
+    /*
     else if (tile == 2 && stage->foodLeft <= 0) {
 
         return 3;
     }
+    */
 
     return 0;
 }
