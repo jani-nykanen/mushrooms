@@ -44,7 +44,9 @@ void stage_mark_for_redraw(Stage* stage, i16 x, i16 y);
 void stage_redraw_all(Stage* stage);
 bool stage_does_redraw(Stage* stage, i16 x, i16 y);
 
-void stage_parse_objects(Stage* stage, void* pplayer);
+i16 stage_parse_objects(Stage* stage, void* pplayer, 
+    void** penemies, i16* enemyCount,
+    i16 (*getTurnTime)(void));
 
 bool stage_can_be_moved_to(Stage* stage, i16 x, i16 y, i16 dirx, i16 diry);
 bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y, i16* dirx, i16* diry);

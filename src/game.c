@@ -8,6 +8,7 @@
 #include "keyb.h"
 #include "keycodes.h"
 #include "mathext.h"
+#include "enemy.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +33,8 @@ typedef struct {
 
     Stage* stage;
     Player* player;
+    Enemy** enemies;
+    i16 enemyCount;
 
     bool backgroundDrawn;
 
@@ -88,7 +91,15 @@ static i16 game_init() {
 
         return 1;
     }
-    stage_parse_objects(game->stage, (void*)game->player);
+
+    game->enemies = NULL;
+    game->enemyCount = 0;
+
+    if (stage_parse_objects(game->stage, (void*)game->player, 
+        (void**)&game->enemies, &game->enemyCount, get_turn_time) == 1) {
+
+        return 1;
+    }
 
     game->backgroundDrawn = false;
     game->turnTimer = 0;
@@ -101,13 +112,19 @@ static i16 game_init() {
 }
 
 
-static void reset_game() {
+static i16 reset_game() {
 
     stage_reset(game->stage);
-    stage_parse_objects(game->stage, (void*)game->player);
+    if (stage_parse_objects(game->stage, (void*)game->player, 
+        (void**)&game->enemies, &game->enemyCount, get_turn_time)) {
+
+        return 1;
+    }
 
     game->turnTimer = 0;
     game->messageIndex = 0;
+
+    return 0;
 }
 
 
@@ -139,7 +156,10 @@ static i16 update_pause_menu() {
         case 1:
 
             game->pauseMenuActive = false;
-            reset_game();
+            if (reset_game() != 0) {
+
+                return -1;
+            }
 
             break;
 
@@ -159,18 +179,22 @@ static i16 game_update(i16 step) {
     static const i16 MESSAGE_TIME[] = {60, 120};
 
     u8 ret;
+    i16 i;
 
     if (game->messageIndex > 0) {
 
         if ((game->turnTimer += step) >= MESSAGE_TIME[game->messageIndex-1]) {
 
-            reset_game();
+            if (reset_game() != 0) {
+
+                return 1;
+            }
         }
         return 0;
     }
 
     if (game->pauseMenuActive) {
-
+        
         if (update_pause_menu()) {
 
             return 1;
@@ -189,7 +213,10 @@ static i16 game_update(i16 step) {
 
     if (keyb_get_normal_key(KEY_R) == STATE_PRESSED) {
 
-        reset_game();
+        if (reset_game() == 1) {
+
+            return 1;
+        }
         return 0;
     }
 
@@ -199,6 +226,11 @@ static i16 game_update(i16 step) {
     }
 
     stage_update(game->stage, step);
+
+    for (i = 0; i < game->enemyCount; ++ i) {
+
+        enemy_update(game->enemies[i], game->stage);
+    }
 
     ret = player_update(game->player, game->stage, step);
     if (ret > 0) {
@@ -346,6 +378,8 @@ static void draw_stage_info() {
 
 static void game_redraw() {
 
+    i16 i;
+
     if (game->messageIndex > 0) {
 
         if (!game->messageDrawn) {
@@ -375,6 +409,12 @@ static void game_redraw() {
 
     player_pre_draw(game->player, game->stage);
     stage_draw(game->stage, game->bmpTileset);
+
+    for (i = 0; i < game->enemyCount; ++ i) {
+
+        enemy_draw(game->enemies[i], game->stage, game->bmpTileset);
+    }
+
     player_draw(game->player, game->stage, game->bmpSprites);
 
     if (game->player->loopx != 0 || game->player->loopy != 0) {
@@ -394,14 +434,22 @@ i16 init_game_scene() {
 
 void dispose_game_scene() {
 
+    i16 i;
+
     if (game == NULL) return;
 
     dispose_stage(game->stage);
+    dispose_player(game->player);
 
     dispose_bitmap(game->bmpTileset);
     dispose_bitmap(game->bmpSprites);
     dispose_bitmap(game->bmpFont);
     dispose_bitmap(game->bmpIcons);
+
+    for (i = 0; i < game->enemyCount; ++ i) {
+
+        dispose_enemy(game->enemies[i]);
+    }
 
     free(game);
 }

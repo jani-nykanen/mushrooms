@@ -4,6 +4,7 @@
 #include "graph.h"
 #include "player.h"
 #include "mathext.h"
+#include "enemy.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -22,19 +23,19 @@ static const i16 Y_DIR[] = {-1, 1, 0, 0};
 static const i16 START_POS_ANIM_FRAME = 10;
 
 
-static i16 compute_food(Tilemap* tmap) {
+static i16 compute_index(Tilemap* tmap, i16 index) {
 
     i16 i;
     i16 count = 0;
 
     for (i = 0; i < tmap->width*tmap->height; ++ i) {
 
-        if (tmap->data[i] == 3) {
+        if (tmap->data[i] == index) {
 
             ++ count;
         }
     }
-    return count;
+    return count;   
 }
 
 
@@ -62,7 +63,7 @@ static void set_static_layer(u8* dest, Tilemap* tmap) {
 
     for (i = 0; i < tmap->width*tmap->height; ++ i) {
 
-        if (dest[i] == 2)
+        if (tmap->data[i] == 2 || (tmap->data[i] >= 12 && tmap->data[i] <= 13))
             dest[i] = 0;
         else
             dest[i] = tmap->data[i];
@@ -164,7 +165,7 @@ Stage* new_stage(const str mapPackPath, i16 initialMapIndex) {
     stage->startPos = find_start_pos(stage->activeMap);
     stage->startPosAnimTimer = 0;
 
-    stage->foodLeft = compute_food(stage->activeMap);
+    stage->foodLeft = compute_index(stage->activeMap, 3);
 
     return stage;
 }
@@ -192,7 +193,7 @@ void stage_reset(Stage* stage) {
 
     memset(stage->redrawBuffer, 1, stage->width*stage->height);
 
-    stage->foodLeft = compute_food(stage->activeMap);
+    stage->foodLeft = compute_index(stage->activeMap, 3);
 
     memset(stage->solidMap, 0, stage->width*stage->height);
     compute_initial_solid_map(stage);
@@ -238,7 +239,7 @@ void stage_draw(Stage* stage, Bitmap* bmpTileset) {
         1, 13, 4, 2, 
         3, 9, 11, 5, 
         6, 7, 8,  0,
-        0, 0, 0,  0,
+        0, 16, 0,  0,
         10, 12};
 
     i16 x, y;
@@ -289,11 +290,24 @@ void stage_clear_redraw_buffer(Stage* stage) {
 }
 
 
-void stage_parse_objects(Stage* stage, void* pplayer) {
+i16 stage_parse_objects(Stage* stage, void* pplayer, 
+    void** penemies, i16* enemyCount, 
+    i16 (*getTurnTime)(void)) {
 
-    i16 x, y;
+    i16 x, y, i;
     u8 tile;
+    Enemy** enemies;
 
+    *enemyCount = compute_index(stage->activeMap, 12) + 
+                  compute_index(stage->activeMap, 13);
+    enemies = (Enemy**) calloc(*enemyCount, sizeof(Enemy*));
+    if (enemies == NULL) {
+
+        ERROR_MALLOC();
+        return 1;
+    }
+
+    i = 0;
     for (y = 0; y < stage->height; ++ y) {
 
         for (x = 0; x < stage->width; ++ x) {
@@ -303,8 +317,21 @@ void stage_parse_objects(Stage* stage, void* pplayer) {
 
                 player_set_starting_position((Player*)pplayer, x, y);
             }
+            else if(tile >= 12 && tile <= 13) {
+
+                enemies[i ++] = new_enemy(x, y, tile-12, getTurnTime, stage);
+                if (enemies[i-1] == NULL) {
+
+                    *enemyCount = i-1;
+                    return 1;
+                }
+            }
         }
     }
+
+    *penemies = (void*)enemies;
+
+    return 0;
 }
 
 
