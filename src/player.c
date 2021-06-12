@@ -91,7 +91,7 @@ void player_set_starting_position(Player* player, i16 x, i16 y) {
 
 
 
-static void player_shift_mushrooms(Player* player, Stage* stage) {
+static void shift_mushrooms(Player* player, Stage* stage) {
 
     Vector2 previous[2];
     i16 pointer = 0;
@@ -131,7 +131,7 @@ static void player_shift_mushrooms(Player* player, Stage* stage) {
 }
 
 
-static void player_stop_moving(Player* player, Stage* stage) {
+static void stop_moving(Player* player, Stage* stage) {
 
     stage_mark_for_redraw(stage, player->pos.x, player->pos.y);
     stage_mark_for_redraw(stage, player->target.x, player->target.y);   
@@ -148,11 +148,11 @@ static void player_stop_moving(Player* player, Stage* stage) {
     player->loopx = 0;
     player->loopy = 0;
 
-    player_shift_mushrooms(player, stage);
+    shift_mushrooms(player, stage);
 }
 
 
-static void player_add_mushroom(Player* player) {
+static void add_mushroom(Player* player) {
 
     if (player->mushroomCount == MAX_MUSHROOMS) return;
 
@@ -160,6 +160,25 @@ static void player_add_mushroom(Player* player) {
     player->mushrooms[player->mushroomCount-1] = player->mushrooms[player->mushroomCount-2];
 
     player->animateLastMushroom = false;
+}
+
+
+static void transform_mushrooms(Player* player, Stage* stage) {
+
+    i16 i;
+    i16 x, y;
+
+    for (i = 1; i < player->mushroomCount; ++ i) {
+
+        x = player->mushrooms[i].x;
+        y = player->mushrooms[i].y;
+
+        stage_set_static_tile(stage, x, y, 19);
+        stage_mark_solid(stage, x, y, 1);
+    }
+
+    player->mushroomCount = 1;
+    player->redrawMushrooms = false;
 }
 
 
@@ -177,7 +196,7 @@ static u8 player_control(Player* player, Stage* stage, i16 step) {
         player->redraw = true;
         if (player->getTurnTime() <= 0) {
 
-            player_stop_moving(player, stage);
+            stop_moving(player, stage);
             stopped = true;
         }
         else {
@@ -213,11 +232,15 @@ static u8 player_control(Player* player, Stage* stage, i16 step) {
         }
         else if (ret == 2) {
 
-            player_add_mushroom(player);
+            add_mushroom(player);
         }
         else if (ret == 3) {
 
             return 2;
+        }
+        else if (ret == 4) {
+
+            transform_mushrooms(player, stage);
         }
     }
 

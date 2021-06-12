@@ -39,6 +39,12 @@ static i16 compute_index(Tilemap* tmap, i16 index) {
 }
 
 
+static i16 count_food(Tilemap* tmap) {
+
+    return compute_index(tmap, 3) + compute_index(tmap, 14);
+}
+
+
 static Vector2 find_start_pos(Tilemap* tmap) {
 
     i16 x, y;
@@ -165,7 +171,7 @@ Stage* new_stage(const str mapPackPath, i16 initialMapIndex) {
     stage->startPos = find_start_pos(stage->activeMap);
     stage->startPosAnimTimer = 0;
 
-    stage->foodLeft = compute_index(stage->activeMap, 3);
+    stage->foodLeft = count_food(stage->activeMap);
 
     return stage;
 }
@@ -193,7 +199,7 @@ void stage_reset(Stage* stage) {
 
     memset(stage->redrawBuffer, 1, stage->width*stage->height);
 
-    stage->foodLeft = compute_index(stage->activeMap, 3);
+    stage->foodLeft = count_food(stage->activeMap);
 
     memset(stage->solidMap, 0, stage->width*stage->height);
     compute_initial_solid_map(stage);
@@ -240,7 +246,7 @@ void stage_draw(Stage* stage, Bitmap* bmpTileset) {
         3, 9, 11, 5, 
         6, 7, 8,  0,
         0, 16, 0,  0,
-        10, 12};
+        10, 12, 21};
 
     i16 x, y;
     i16 dx, dy;
@@ -464,6 +470,14 @@ bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y,
 
         return 2;
     }
+    // Radish, weird things happen
+    else if (tile == 14) {
+
+        stage->staticLayer[index] = 0;
+        -- stage->foodLeft;
+
+        return 4;
+    }
     // Portal
     // (sometimes this does not work, maybe the tile value
     // in the initial position is altered somehow?)
@@ -484,4 +498,14 @@ void stage_mark_solid(Stage* stage, i16 x, i16 y, u8 state) {
     y = neg_mod(y, stage->height);
 
     stage->solidMap[y * stage->width + x] = state;
+}
+
+
+void stage_set_static_tile(Stage* stage, i16 x, i16 y, u8 id) {
+
+    x = neg_mod(x, stage->width);
+    y = neg_mod(y, stage->height);
+
+    stage->staticLayer[y * stage->width + x] = id;
+    stage->redrawBuffer[y * stage->width + x] = true;
 }

@@ -53,4 +53,6 @@ bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y, i16* dirx, i16* dir
 
 void stage_mark_solid(Stage* stage, i16 x, i16 y, u8 state);
 
+void stage_set_static_tile(Stage* stage, i16 x, i16 y, u8 id);
+
 #endif // __STAGE__
