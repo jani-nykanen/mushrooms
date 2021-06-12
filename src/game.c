@@ -16,7 +16,9 @@
 
 
 static const str STAGE_TITLES[] = {
-    "\"TEST STAGE\""
+    "\"TEST STAGE 1\"",
+    "\"TEST STAGE 2\"",
+    "\"TEST STAGE 3\""
 };
 
 
@@ -75,7 +77,7 @@ static i16 game_init() {
         return 1;
     }
 
-    game->stage = new_stage("LEVELS1.DAT", 0);
+    game->stage = new_stage("LEVELS1.DAT", 1);
     if (game->stage == NULL) {
 
         return 1;
