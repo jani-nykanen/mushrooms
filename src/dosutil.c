@@ -8,10 +8,22 @@ static u16 asm__port_in(u16 address);
     value [ax];
 
 
+static u8 asm__port_in_u8(u8 address);
+#pragma aux asm__port_in_u8 = \
+    "in al, dx" \
+    parm [dx] \
+    value [al];
+    
+
 static void asm__port_out(u16 address, u16 value);
 #pragma aux asm__port_out = \
     "out dx, ax" \
     parm [dx] [ax];
+
+static void asm__port_out_u8(u8 address, u8 value);
+#pragma aux asm__port_out_u8 = \
+    "out dx, al" \
+    parm [dx] [al];
 
 
 static void asm__set_vect(u16 num, InterruptHandler handler);
@@ -39,6 +51,17 @@ void port_out(u16 address, u16 value) {
     asm__port_out(address, value);
 }
 
+
+u8 port_in_u8(u8 address) {
+
+    return asm__port_in_u8(address);
+}
+
+
+void port_out_u8(u8 address, u8 value) {
+
+    asm__port_out_u8(address, value);
+}
 
 
 void set_vect(u16 num, InterruptHandler handler) {
