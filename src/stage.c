@@ -110,7 +110,7 @@ static u8* copy_static_layer(Tilemap* tmap) {
 
 
 
-Stage* new_stage(const str mapPackPath, i16 initialMapIndex) {
+Stage* new_stage(TilemapPack* mapPack, i16 initialMapIndex) {
 
     Stage* stage;
 
@@ -121,15 +121,8 @@ Stage* new_stage(const str mapPackPath, i16 initialMapIndex) {
         return NULL;
     }
 
-    stage->mapPack = load_tilemap_pack(mapPackPath);
-    if (stage->mapPack == NULL) {
-
-        free(stage);
-        return NULL;
-    }
-
     stage->index = initialMapIndex;
-    stage->activeMap = stage->mapPack->maps[initialMapIndex];
+    stage->activeMap = mapPack->maps[initialMapIndex];
 
     stage->width = stage->activeMap->width;
     stage->height = stage->activeMap->height;
@@ -137,9 +130,7 @@ Stage* new_stage(const str mapPackPath, i16 initialMapIndex) {
     stage->staticLayer = copy_static_layer(stage->activeMap);
     if (stage->staticLayer == NULL) {
 
-        dispose_tilemap_pack(stage->mapPack);
         free(stage);
-
         return NULL;
     }
 
@@ -181,14 +172,13 @@ void dispose_stage(Stage* stage) {
 
     if (stage == NULL) return;
 
-    dispose_tilemap_pack(stage->mapPack);
-
-    if (stage->activeMap != NULL)
-        free(stage->activeMap);
     if (stage->redrawBuffer != NULL)
         free(stage->redrawBuffer);
     if (stage->solidMap != NULL)
         free(stage->solidMap);
+    if (stage->staticLayer != NULL)
+        free(stage->staticLayer);
+
     free(stage);
 }
 
@@ -306,11 +296,15 @@ i16 stage_parse_objects(Stage* stage, void* pplayer,
 
     *enemyCount = compute_index(stage->activeMap, 12) + 
                   compute_index(stage->activeMap, 13);
-    enemies = (Enemy**) calloc(*enemyCount, sizeof(Enemy*));
-    if (enemies == NULL) {
 
-        ERROR_MALLOC();
-        return 1;
+    if (*enemyCount > 0) {
+
+        enemies = (Enemy**) calloc(*enemyCount, sizeof(Enemy*));
+        if (enemies == NULL) {
+
+            ERROR_MALLOC();
+            return 1;
+        }
     }
 
     i = 0;

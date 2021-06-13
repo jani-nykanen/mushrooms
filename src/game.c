@@ -9,6 +9,7 @@
 #include "keycodes.h"
 #include "mathext.h"
 #include "enemy.h"
+#include "passw.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -30,6 +31,7 @@ typedef struct {
     Bitmap* bmpTileset;
     Bitmap* bmpFont;
     Bitmap* bmpIcons;
+    TilemapPack* maps;
 
     Stage* stage;
     Player* player;
@@ -65,10 +67,15 @@ static i16 get_turn_time() {
 
 static i16 game_init() {
 
-    game = (GameScene*) calloc(sizeof(GameScene), 1);
+    game = (GameScene*) calloc(1, sizeof(GameScene));
     if (game == NULL) {
 
         ERROR_MALLOC();
+        return 1;
+    }
+
+    if ((game->maps = load_tilemap_pack("LEVELS1.DAT")) == NULL) {
+
         return 1;
     }
 
@@ -80,7 +87,7 @@ static i16 game_init() {
         return 1;
     }
 
-    game->stage = new_stage("LEVELS1.DAT", 1);
+    game->stage = new_stage(game->maps, 0);
     if (game->stage == NULL) {
 
         return 1;
@@ -112,7 +119,23 @@ static i16 game_init() {
 }
 
 
+static void clear_enemy_array() {
+
+    i16 i;
+
+    for (i = 0; i < game->enemyCount; ++ i) {
+
+        dispose_enemy(game->enemies[i]);
+    }
+    free(game->enemies);
+
+    game->enemies = NULL;
+}
+
+
 static i16 reset_game() {
+
+    clear_enemy_array();
 
     stage_reset(game->stage);
     if (stage_parse_objects(game->stage, (void*)game->player, 
@@ -123,6 +146,38 @@ static i16 reset_game() {
 
     game->turnTimer = 0;
     game->messageIndex = 0;
+
+    return 0;
+}
+
+
+static i16 next_stage() {
+
+    i16 stageIndex = game->stage->index;
+
+    clear_enemy_array();
+
+    dispose_stage(game->stage);
+
+    game->stage = new_stage(game->maps, (stageIndex+1) % (game->maps->count));
+    if (game->stage == NULL) {
+
+        return 1;
+    }
+
+    if (stage_parse_objects(game->stage, (void*)game->player, 
+        (void**)&game->enemies, &game->enemyCount, get_turn_time)) {
+
+        return 1;
+    }
+
+    game->turnTimer = 0;
+
+    game->messageIndex = 0;
+    game->messageDrawn = false;
+    game->pauseMenuActive = false;
+
+    game->backgroundDrawn = false;
 
     return 0;
 }
@@ -185,9 +240,19 @@ static i16 game_update(i16 step) {
 
         if ((game->turnTimer += step) >= MESSAGE_TIME[game->messageIndex-1]) {
 
-            if (reset_game() != 0) {
+            if (game->messageIndex == 1) {
 
-                return 1;
+                if (reset_game() != 0) {
+
+                    return 1;
+                }
+            }
+            else if(game->messageIndex == 2) {
+
+                if (next_stage() != 0) {
+
+                    return 1;
+                }
             }
         }
         return 0;
@@ -372,7 +437,9 @@ static void draw_stage_info() {
         160, 200-16, true, 1);
 
     draw_text_fast(game->bmpFont, "PASSWORD:", 80 - 18, 8, -1, false);
-    draw_colored_text(game->bmpFont, "123456", 320 - 64, 18, false, 1);
+
+    snprintf(buffer, 10, "%u", gen_password(0, game->stage->index));
+    draw_colored_text(game->bmpFont, buffer, 320 - 60, 18, false, 1);
 }
 
 
@@ -380,13 +447,9 @@ static void game_redraw() {
 
     i16 i;
 
-    if (game->messageIndex > 0) {
+    if (game->messageIndex > 0 &&
+        game->messageDrawn) {
 
-        if (!game->messageDrawn) {
-            
-            draw_message(); 
-            game->messageDrawn = true;
-        }
         return;
     }
 
@@ -423,6 +486,16 @@ static void game_redraw() {
     }
 
     stage_clear_redraw_buffer(game->stage);
+
+    if (game->messageIndex > 0) {
+
+        if (!game->messageDrawn) {
+            
+            draw_message(); 
+            game->messageDrawn = true;
+        }
+        return;
+    }
 }
 
 
@@ -445,6 +518,8 @@ void dispose_game_scene() {
     dispose_bitmap(game->bmpSprites);
     dispose_bitmap(game->bmpFont);
     dispose_bitmap(game->bmpIcons);
+    
+    dispose_tilemap_pack(game->maps);
 
     for (i = 0; i < game->enemyCount; ++ i) {
 

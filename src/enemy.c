@@ -19,12 +19,12 @@ Enemy* new_enemy(i16 x, i16 y, i16 type,
     }
 
     enemy->pos = vec2(x, y);
-    enemy->target = enemy->pos;
     enemy->renderPos = vec2(x*16, y*16);
 
     enemy->type = type;
 
     enemy->redraw = true;
+    enemy->moving = false;
 
     enemy->getTurnTime = getTurnTime;
 
@@ -56,6 +56,71 @@ void dispose_enemy(Enemy* enemy) {
 
 void enemy_update(Enemy* enemy, Stage* stage) {
 
+    i16 t = enemy->getTurnTime();
+    i16 i;
+
+    if (enemy->moving && t <= 0) {
+
+        stage_mark_for_redraw(stage, enemy->pos.x, enemy->pos.y);
+
+        enemy->pos.x += enemy->dirx;
+        enemy->pos.y += enemy->diry;
+
+        stage_mark_solid(stage, enemy->pos.x, enemy->pos.y, 1);
+
+        enemy->renderPos.x = enemy->pos.x * 16;
+        enemy->renderPos.y = enemy->pos.y * 16;
+
+        enemy->moving = false;
+        enemy->redraw = true;
+
+        return;
+    }
+
+    if (!enemy->moving && t > 0) {
+
+        i = 0;
+
+        // Repeat twice: if then fails, stuck and do not move
+        for (i = 0; i < 3; ++ i) {
+
+            if (i == 2) return;
+
+            if (!stage_can_be_moved_to(stage, 
+                enemy->pos.x + enemy->dirx, 
+                enemy->pos.y + enemy->diry, 0, 0)) {
+
+                enemy->dirx *= -1;
+                enemy->diry *= -1;
+                continue;
+            }
+            else {
+
+                break;
+            }
+        }
+
+        stage_mark_solid(stage, enemy->pos.x, enemy->pos.y, 0);
+        
+        enemy->moving = true;
+    }
+    if (!enemy->moving) {
+
+        stage_mark_solid(stage, enemy->pos.x, enemy->pos.y, 1);
+
+        if (stage_does_redraw(stage, enemy->pos.x, enemy->pos.y)) {
+
+            enemy->redraw = true;
+        }
+
+        return;
+    }
+
+    enemy->renderPos.x = enemy->pos.x * 16 + (16 - t) * enemy->dirx;
+    enemy->renderPos.y = enemy->pos.y * 16 + (16 - t) * enemy->diry;
+
+    enemy->redraw = true;
+    stage_mark_for_redraw(stage, enemy->pos.x, enemy->pos.y);
 }
 
 

@@ -10,7 +10,6 @@
 typedef struct {
 
     Vector2 pos;
-    Vector2 target;
     Vector2 renderPos;
 
     bool moving;

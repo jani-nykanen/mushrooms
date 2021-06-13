@@ -8,8 +8,6 @@
 
 typedef struct {
 
-
-    TilemapPack* mapPack;
     Tilemap* activeMap;
 
     u8* staticLayer;
@@ -30,7 +28,7 @@ typedef struct {
 } Stage;
 
 
-Stage* new_stage(const str mapPackPath, i16 initialMapIndex);
+Stage* new_stage(TilemapPack* mapPack, i16 initialMapIndex);
 void dispose_stage(Stage* stage);
 
 void stage_reset(Stage* stage);
