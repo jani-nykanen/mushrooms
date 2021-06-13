@@ -25,10 +25,11 @@ static void push_sound(u16 freq, u16 len) {
         buffer[i] = freq;
     }
 
+    if (bufferStop == 0)
+        activeFreq = 0;
+
     bufferPointer = 0;
     bufferStop = len;
-
-    activeFreq = 0;
 }
 
 

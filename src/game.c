@@ -204,8 +204,6 @@ static i16 update_pause_menu() {
 
     if (keyb_get_normal_key(KEY_RETURN) == STATE_PRESSED) {
 
-        mixer_beep(36000, 10);
-
         switch (game->cursorPos) {
 
         case 0:
@@ -237,6 +235,8 @@ static i16 update_pause_menu() {
 
         default: break;
         }
+
+        mixer_beep(36000, 10);
     }
 
     return 0;
@@ -298,6 +298,9 @@ static i16 game_update(i16 step) {
 
             return 1;
         }
+
+        mixer_beep(36000, 10);
+
         return 0;
     }
 
