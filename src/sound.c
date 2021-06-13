@@ -21,6 +21,9 @@ void sound(u16 frequency) {
     port_out(0x43, 0x6b);
  	port_out(0x42, frequency);
  
- 	b = port_in(0x61) | 3;
- 	port_out(0x61, b);
+ 	b = port_in(0x61);
+    //if (b != (b | 3)) {
+
+ 	    port_out(0x61, b | 3);
+    //}
 }

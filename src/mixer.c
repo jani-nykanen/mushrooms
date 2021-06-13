@@ -4,6 +4,7 @@
 #include "sound.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 
 static u16* buffer = NULL;
@@ -11,7 +12,14 @@ static u16 bufferPointer = 0;
 static u16 bufferStop = 0;
 
 static u16 activeFreq = 0; 
+static bool playNext;
 
+
+static void clear() {
+
+    bufferStop = 0;
+    bufferPointer = 0;
+}
 
 
 static void push_sound(u16 freq, u16 len) {
@@ -20,16 +28,16 @@ static void push_sound(u16 freq, u16 len) {
 
     // nosound();
 
-    for (i = 0; i < len; i ++) {
+    for (i = bufferStop; i < bufferStop + len; i ++) {
 
         buffer[i] = freq;
     }
 
-    if (bufferStop == 0)
-        activeFreq = 0;
-
     bufferPointer = 0;
-    bufferStop = len;
+    bufferStop += len;
+
+    playNext = true;
+    activeFreq = buffer[0];
 }
 
 
@@ -44,6 +52,7 @@ i16 init_mixer(u16 bufferSize) {
     bufferPointer = 0;
     bufferStop = 0;
     activeFreq = 0;
+    playNext = false;
 
     return 0;
 }
@@ -62,25 +71,43 @@ void mixer_update(i16 step) {
 
     if (bufferStop == 0) return;
 
+    if (playNext) {
+
+        sound(activeFreq);
+    }
+
     f = buffer[bufferPointer];
     if (f != activeFreq) {
 
         activeFreq = f;
-        // nosound();
-        sound(f);
+        playNext = true;
+
+        nosound();
     }
 
     if ( (bufferPointer += step) >= bufferStop) {
 
         nosound();
         bufferStop = 0;
+        activeFreq = 0;
     }
 }
 
 
 void mixer_beep(u16 frequency, u16 length) {
-
+    
+    clear();
     push_sound(frequency, length);
+}
+
+
+void mixer_beep_2_step(u16 freq1, u16 len1, u16 freq2, u16 len2) {
+
+    activeFreq = 0;
+
+    clear();
+    push_sound(freq1, len1);
+    push_sound(freq2, len2);
 }
 
 

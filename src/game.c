@@ -319,6 +319,11 @@ static i16 game_update(i16 step) {
     ret = player_update(game->player, game->stage, step);
     if (ret > 0) {
 
+        if (ret == 1) {
+
+            mixer_beep_2_step(32000, 20, 24000, 40);
+        }
+
         game->turnTimer = 0;
         game->messageIndex = ret;
         game->messageDrawn = false;
