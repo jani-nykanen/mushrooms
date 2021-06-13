@@ -10,6 +10,7 @@
 #include "mathext.h"
 #include "enemy.h"
 #include "passw.h"
+#include "mixer.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -185,6 +186,7 @@ static i16 next_stage() {
 
 static i16 update_pause_menu() {
 
+    i16 oldPos = game->cursorPos;
     if (keyb_get_ext_key(KEY_UP) == STATE_PRESSED) {
 
         -- game->cursorPos;
@@ -195,7 +197,14 @@ static i16 update_pause_menu() {
     }
     game->cursorPos = neg_mod(game->cursorPos, 4);
 
+    if (game->cursorPos != oldPos) {
+
+        mixer_beep(42000, 5);
+    }
+
     if (keyb_get_normal_key(KEY_RETURN) == STATE_PRESSED) {
+
+        mixer_beep(36000, 10);
 
         switch (game->cursorPos) {
 
@@ -218,7 +227,12 @@ static i16 update_pause_menu() {
 
             break;
 
+        case 2:
+         
+            break;
+
         case 3:
+
             return 1;
 
         default: break;
@@ -272,6 +286,8 @@ static i16 game_update(i16 step) {
         game->pauseMenuActive = true;
         game->cursorPos = 0;
         game->messageDrawn = false;
+
+        mixer_beep(32000, 10);
 
         return 0;
     }

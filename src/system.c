@@ -3,6 +3,7 @@
 #include "keyb.h"
 #include "keycodes.h"
 #include "err.h"
+#include "mixer.h"
 
 #include <stdlib.h>
 
@@ -41,6 +42,7 @@ static bool main_loop(i16 frameSkip) {
             return true;
             
         keyb_update();
+        mixer_update(frameSkip+1);
 
         vblank();
 
@@ -61,9 +63,17 @@ static bool main_loop(i16 frameSkip) {
 
 i16 init_system(CGAPalette initialPalette) {
 
+    // In frames, 600 = 10 seconds
+    static const u16 SOUND_BUFFER_SIZE = 600;
+
     init_error_system();
     init_graphics(initialPalette);
     init_keyboard_listener();
+
+    if (init_mixer(SOUND_BUFFER_SIZE) != 0) {
+
+        return 1;
+    }
 
     return 0;
 }
@@ -73,6 +83,7 @@ void dispose_system() {
 
     dispose_graphics();
     dispose_keyboard_listener();
+    dispose_mixer();
 }
 
 
