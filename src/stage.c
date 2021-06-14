@@ -5,6 +5,7 @@
 #include "player.h"
 #include "mathext.h"
 #include "enemy.h"
+#include "mixer.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -365,6 +366,8 @@ static void toggle_special_walls(Stage* stage, i16 j) {
 
     i16 i;
 
+    mixer_beep_3_step(40000, 6, 35000, 6, 30000, 18);
+
     for (i = 0; i < stage->width * stage->height; ++ i) {
 
         if (stage->staticLayer[i] == 4 &&
@@ -399,6 +402,8 @@ static void reverse_arrow_tiles(Stage* stage, i16 j) {
 
     i16 i;
     u8 tile;
+
+    mixer_beep_3_step(30000, 6, 35000, 6, 40000, 18);
 
     for (i = 0; i < stage->width * stage->height; ++ i) {
 

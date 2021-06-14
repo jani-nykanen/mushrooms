@@ -6,6 +6,7 @@
 #include "keycodes.h"
 #include "game.h"
 #include "mathext.h"
+#include "mixer.h"
 
 #include <stdlib.h>
 
@@ -160,6 +161,8 @@ static void add_mushroom(Player* player) {
     player->mushrooms[player->mushroomCount-1] = player->mushrooms[player->mushroomCount-2];
 
     player->animateLastMushroom = false;
+
+    mixer_beep_2_step(40000, 5, 45000, 10);
 }
 
 
@@ -179,6 +182,8 @@ static void transform_mushrooms(Player* player, Stage* stage) {
 
     player->mushroomCount = 1;
     player->redrawMushrooms = false;
+
+    mixer_beep_3_step(38000, 6, 32000, 8, 36000, 16);
 }
 
 

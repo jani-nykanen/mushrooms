@@ -103,11 +103,31 @@ void mixer_beep(u16 frequency, u16 length) {
 
 void mixer_beep_2_step(u16 freq1, u16 len1, u16 freq2, u16 len2) {
 
-    activeFreq = 0;
+    clear();
+    push_sound(freq1, len1);
+    push_sound(freq2, len2);
+}
+
+
+void mixer_beep_3_step(u16 freq1, u16 len1, u16 freq2, u16 len2, u16 freq3, u16 len3) {
 
     clear();
     push_sound(freq1, len1);
     push_sound(freq2, len2);
+    push_sound(freq3, len3);
+}
+
+
+void mixer_play_buffered_sound(u16* freqBuf, u16* lenBuf, u16 size) {
+
+    u16 i;
+
+    clear();
+
+    for (i = 0; i < size; ++ i) {
+
+        push_sound(freqBuf[i], lenBuf[i]);
+    }
 }
 
 

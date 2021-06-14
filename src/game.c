@@ -17,6 +17,15 @@
 #include <stdio.h>
 
 
+static const u16 VICTORY_JINGLE_FREQ[] = {
+    40000, 32000, 35000, 38000, 41000
+};
+
+static const u16 VICTORY_JINGLE_LEN[] = {
+    16, 10, 10, 10, 30
+};
+
+
 
 static const str STAGE_TITLES[] = {
     "\"TEST STAGE 1\"",
@@ -186,6 +195,7 @@ static i16 next_stage() {
 
 static i16 update_pause_menu() {
 
+    i16 i;
     i16 oldPos = game->cursorPos;
     if (keyb_get_ext_key(KEY_UP) == STATE_PRESSED) {
 
@@ -199,7 +209,7 @@ static i16 update_pause_menu() {
 
     if (game->cursorPos != oldPos) {
 
-        mixer_beep(42000, 5);
+        mixer_beep(42000, 6);
     }
 
     if (keyb_get_normal_key(KEY_RETURN) == STATE_PRESSED) {
@@ -212,6 +222,11 @@ static i16 update_pause_menu() {
 
             stage_redraw_all(game->stage);
             player_force_redraw(game->player);
+
+            for (i = 0; i < game->enemyCount; ++ i) {
+
+                game->enemies[i]->redraw = true;
+            }
 
             break;
 
@@ -226,7 +241,7 @@ static i16 update_pause_menu() {
             break;
 
         case 2:
-         
+
             break;
 
         case 3:
@@ -236,7 +251,7 @@ static i16 update_pause_menu() {
         default: break;
         }
 
-        mixer_beep(36000, 10);
+        mixer_beep(38000, 12);
     }
 
     return 0;
@@ -287,7 +302,7 @@ static i16 game_update(i16 step) {
         game->cursorPos = 0;
         game->messageDrawn = false;
 
-        mixer_beep(32000, 10);
+        mixer_beep(32000, 14);
 
         return 0;
     }
@@ -299,7 +314,7 @@ static i16 game_update(i16 step) {
             return 1;
         }
 
-        mixer_beep(36000, 10);
+        mixer_beep_2_step(40000, 10, 30000, 16);
 
         return 0;
     }
@@ -322,6 +337,10 @@ static i16 game_update(i16 step) {
         if (ret == 1) {
 
             mixer_beep_2_step(32000, 20, 24000, 40);
+        }
+        else if (ret == 2) {
+
+            mixer_play_buffered_sound((u16*)VICTORY_JINGLE_FREQ, (u16*)VICTORY_JINGLE_LEN, 5);
         }
 
         game->turnTimer = 0;
