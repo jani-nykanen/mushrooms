@@ -14,6 +14,8 @@ static u16 bufferStop = 0;
 static u16 activeFreq = 0; 
 static bool playNext;
 
+static bool enabled = true;
+
 
 static void clear() {
 
@@ -41,7 +43,7 @@ static void push_sound(u16 freq, u16 len) {
 }
 
 
-i16 init_mixer(u16 bufferSize) {
+i16 init_mixer(u16 bufferSize, bool initialState) {
 
     buffer = (u16*) calloc(bufferSize, sizeof(u16));
     if (buffer == NULL) {
@@ -53,6 +55,8 @@ i16 init_mixer(u16 bufferSize) {
     bufferStop = 0;
     activeFreq = 0;
     playNext = false;
+
+    enabled = initialState;
 
     return 0;
 }
@@ -69,7 +73,7 @@ void mixer_update(i16 step) {
 
     u16 f;
 
-    if (bufferStop == 0) return;
+    if (bufferStop == 0 || !enabled) return;
 
     if (playNext) {
 
@@ -96,12 +100,16 @@ void mixer_update(i16 step) {
 
 void mixer_beep(u16 frequency, u16 length) {
     
+    if (!enabled) return;
+
     clear();
     push_sound(frequency, length);
 }
 
 
 void mixer_beep_2_step(u16 freq1, u16 len1, u16 freq2, u16 len2) {
+
+    if (!enabled) return;
 
     clear();
     push_sound(freq1, len1);
@@ -110,6 +118,8 @@ void mixer_beep_2_step(u16 freq1, u16 len1, u16 freq2, u16 len2) {
 
 
 void mixer_beep_3_step(u16 freq1, u16 len1, u16 freq2, u16 len2, u16 freq3, u16 len3) {
+
+    if (!enabled) return;
 
     clear();
     push_sound(freq1, len1);
@@ -121,6 +131,8 @@ void mixer_beep_3_step(u16 freq1, u16 len1, u16 freq2, u16 len2, u16 freq3, u16 
 void mixer_play_buffered_sound(u16* freqBuf, u16* lenBuf, u16 size) {
 
     u16 i;
+
+    if (!enabled) return;
 
     clear();
 
@@ -138,4 +150,22 @@ void mixer_quiet() {
     nosound();
     bufferStop = 0;
     bufferPointer = 0;
+}
+
+
+void mixer_toggle(bool state) {
+
+    enabled = state;
+
+    if (!state) {
+
+        nosound();
+        clear();
+    }
+}
+
+
+bool mixer_is_audio_enabled() {
+
+    return enabled;
 }

@@ -28,9 +28,16 @@ static const u16 VICTORY_JINGLE_LEN[] = {
 
 
 static const str STAGE_TITLES[] = {
-    "\"TEST STAGE 1\"",
-    "\"TEST STAGE 2\"",
-    "\"TEST STAGE 3\""
+    "\"FIRST STEPS\"",
+    "\"AUTOMATION\"",
+    "\"MAGIC WALL\"",
+    "\"PRESS THE BUTTON\"",
+    "\"ON AND OFF\"",
+    "\"OUTSIDE\"",
+    "\"LOOP\"",
+    "\"DIRECTIONS\"",
+    "\"BACK AND FORTH\"",
+    "\"ALL TOGETHER\"",
 };
 
 
@@ -49,6 +56,7 @@ typedef struct {
     i16 enemyCount;
 
     bool backgroundDrawn;
+    bool bordersDrawn;
 
     i16 turnTimer;
 
@@ -77,6 +85,8 @@ static i16 get_turn_time() {
 
 static i16 game_init() {
 
+    static const i16 INITIAL_STAGE = 1;
+
     game = (GameScene*) calloc(1, sizeof(GameScene));
     if (game == NULL) {
 
@@ -97,7 +107,7 @@ static i16 game_init() {
         return 1;
     }
 
-    game->stage = new_stage(game->maps, 0);
+    game->stage = new_stage(game->maps, INITIAL_STAGE-1);
     if (game->stage == NULL) {
 
         return 1;
@@ -119,6 +129,7 @@ static i16 game_init() {
     }
 
     game->backgroundDrawn = false;
+    game->bordersDrawn = false;
     game->turnTimer = 0;
 
     game->messageIndex = 0;
@@ -156,6 +167,7 @@ static i16 reset_game() {
 
     game->turnTimer = 0;
     game->messageIndex = 0;
+    game->bordersDrawn = false;
 
     return 0;
 }
@@ -188,6 +200,7 @@ static i16 next_stage() {
     game->pauseMenuActive = false;
 
     game->backgroundDrawn = false;
+    game->bordersDrawn = false;
 
     return 0;
 }
@@ -220,6 +233,8 @@ static i16 update_pause_menu() {
 
             game->pauseMenuActive = false;
 
+            game->bordersDrawn = false;
+
             stage_redraw_all(game->stage);
             player_force_redraw(game->player);
 
@@ -242,13 +257,17 @@ static i16 update_pause_menu() {
 
         case 2:
 
+            game->messageDrawn = false;
+            mixer_toggle(!mixer_is_audio_enabled());
             break;
 
         case 3:
 
             return 1;
 
-        default: break;
+        default: 
+        
+            break;
         }
 
         mixer_beep(38000, 12);
@@ -436,11 +455,14 @@ static void draw_pause_menu() {
         "AUDIO: ON",
         "QUIT"
     };
-    static const i16 BOX_WIDTH = 24;
+    static const str TEXT_AUDIO_OFF = "AUDIO: OFF";
+    static const i16 BOX_WIDTH = 26;
     static const i16 BOX_HEIGHT = 52;
 
     i16 i;
     i16 x, y;
+
+    str text;
 
     x = 40 - BOX_WIDTH/2;
     y = 100 - BOX_HEIGHT/2 + 4;
@@ -451,8 +473,12 @@ static void draw_pause_menu() {
             BOX_WIDTH, BOX_HEIGHT, 0);
 
         for (i = 0; i < 4; ++ i) {
-            
-            draw_text_fast(game->bmpFont, TEXT[i],
+
+            text = (str)TEXT[i];
+            if (i == 2 && !mixer_is_audio_enabled())
+                text = (str)TEXT_AUDIO_OFF;
+
+            draw_text_fast(game->bmpFont, (const str)text,
                 x + 5, y + i * 12, -1, false);
         }
 
@@ -505,12 +531,16 @@ static void game_redraw() {
     if (!game->backgroundDrawn) {
         
         clear_screen(0);
-        draw_stage_borders();
-
         draw_stage_info();
 
         game->backgroundDrawn = true;
         return;
+    }
+
+    if (!game->bordersDrawn) {
+
+        draw_stage_borders();
+        game->bordersDrawn = true;
     }
 
     player_pre_draw(game->player, game->stage);

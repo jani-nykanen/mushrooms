@@ -21,7 +21,7 @@ bitmaps:
 .PHONY: tilemaps
 tilemaps:
 	mkdir -p output
-	./tools/bin/tmx2bin output/LEVELS1.DAT dev/maps/1.tmx dev/maps/2.tmx 
+	./tools/bin/tmx2bin output/LEVELS1.DAT dev/maps/pack1/*.tmx 
 
 assets: bitmaps tilemaps
 

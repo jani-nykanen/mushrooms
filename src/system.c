@@ -70,7 +70,7 @@ i16 init_system(CGAPalette initialPalette) {
     init_graphics(initialPalette);
     init_keyboard_listener();
 
-    if (init_mixer(SOUND_BUFFER_SIZE) != 0) {
+    if (init_mixer(SOUND_BUFFER_SIZE, true) != 0) {
 
         return 1;
     }

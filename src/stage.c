@@ -70,7 +70,7 @@ static void set_static_layer(u8* dest, Tilemap* tmap) {
 
     for (i = 0; i < tmap->width*tmap->height; ++ i) {
 
-        if (tmap->data[i] == 2 || (tmap->data[i] >= 12 && tmap->data[i] <= 13))
+        if ((tmap->data[i] >= 12 && tmap->data[i] <= 13))
             dest[i] = 0;
         else
             dest[i] = tmap->data[i];
