@@ -23,6 +23,7 @@ tilemaps:
 	mkdir -p output
 	./tools/bin/tmx2bin output/LEVELS1.DAT dev/maps/pack1/*.tmx 
 	./tools/bin/tmx2bin output/LEVELS2.DAT dev/maps/pack2/*.tmx 
+	./tools/bin/tmx2bin output/LEVELS3.DAT dev/maps/pack3/*.tmx 
 
 assets: bitmaps tilemaps
 
