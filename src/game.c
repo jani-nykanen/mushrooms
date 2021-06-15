@@ -85,7 +85,10 @@ static i16 get_turn_time() {
 
 static i16 game_init() {
 
-    static const i16 INITIAL_STAGE = 1;
+    static const i16 INITIAL_STAGE = 3;
+    static const i16 INITIAL_LEVEL_PACK = 2;
+
+    char buffer [16];
 
     game = (GameScene*) calloc(1, sizeof(GameScene));
     if (game == NULL) {
@@ -94,7 +97,9 @@ static i16 game_init() {
         return 1;
     }
 
-    if ((game->maps = load_tilemap_pack("LEVELS1.DAT")) == NULL) {
+    snprintf(buffer, 16, "LEVELS%d.DAT", INITIAL_LEVEL_PACK);
+
+    if ((game->maps = load_tilemap_pack(buffer)) == NULL) {
 
         return 1;
     }
