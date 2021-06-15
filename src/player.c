@@ -11,7 +11,7 @@
 #include <stdlib.h>
 
 
-static const i16 MAX_MUSHROOMS = 16;
+static const i16 MAX_MUSHROOMS = 32;
 
 
 Player* new_player(i16 x, i16 y, 
@@ -54,6 +54,7 @@ Player* new_player(i16 x, i16 y,
     player->mushrooms[0] = player->pos;
     player->redrawMushrooms = false;
     player->animateLastMushroom = true;
+    player->autoSpawnMushrooms = false;
 
     return player;
 }
@@ -78,6 +79,7 @@ void player_set_starting_position(Player* player, i16 x, i16 y) {
     player->mushrooms[0] = player->pos;
     player->redrawMushrooms = false;
     player->animateLastMushroom = true;
+    player->autoSpawnMushrooms = false;
 
     player->animationFrame = 1;
     player->animationRow = 0;
@@ -89,7 +91,6 @@ void player_set_starting_position(Player* player, i16 x, i16 y) {
     player->loopx = 0;
     player->loopy = 0;
 }
-
 
 
 static void shift_mushrooms(Player* player, Stage* stage) {
@@ -153,16 +154,18 @@ static void stop_moving(Player* player, Stage* stage) {
 }
 
 
-static void add_mushroom(Player* player) {
+static void add_mushroom(Player* player, bool soundEffect) {
 
     if (player->mushroomCount == MAX_MUSHROOMS) return;
 
     ++ player->mushroomCount;
-    player->mushrooms[player->mushroomCount-1] = player->mushrooms[player->mushroomCount-2];
+    player->mushrooms[player->mushroomCount-1] = 
+        player->mushrooms[player->mushroomCount-2];
 
     player->animateLastMushroom = false;
 
-    mixer_beep_2_step(40000, 5, 45000, 10);
+    if (soundEffect)
+        mixer_beep_2_step(40000, 6, 45000, 10);
 }
 
 
@@ -237,7 +240,7 @@ static u8 player_control(Player* player, Stage* stage, i16 step) {
         }
         else if (ret == 2) {
 
-            add_mushroom(player);
+            add_mushroom(player, true);
         }
         else if (ret == 3) {
 
@@ -246,6 +249,14 @@ static u8 player_control(Player* player, Stage* stage, i16 step) {
         else if (ret == 4) {
 
             transform_mushrooms(player, stage);
+            player->autoSpawnMushrooms = false;
+        }
+        else if (ret == 5) {
+
+            player->autoSpawnMushrooms = true;
+            add_mushroom(player, false);
+
+            mixer_beep_3_step(40000, 6, 38000, 8, 42000, 16);
         }
     }
 
@@ -289,6 +300,11 @@ static u8 player_control(Player* player, Stage* stage, i16 step) {
     if ((dirx != 0 || diry != 0) && 
         stage_can_be_moved_to(stage, 
             target.x, target.y, dirx, diry)) {
+
+        if (player->autoSpawnMushrooms) {
+
+            add_mushroom(player, false);
+        }
 
         player->target = target;
         player->moving = true;

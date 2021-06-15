@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.5" tiledversion="1.5.0" orientation="orthogonal" renderorder="right-down" width="8" height="8" tilewidth="16" tileheight="16" infinite="0" nextlayerid="2" nextobjectid="1">
+ <tileset firstgid="1" source="../../editor_tiles.tsx"/>
+ <layer id="1" name="base" width="8" height="8">
+  <data encoding="csv">
+1,1,1,1,1,1,1,1,
+1,0,0,3,0,15,2,1,
+1,0,4,0,12,1,9,1,
+7,3,9,1,0,5,3,5,
+1,0,0,3,5,0,5,1,
+1,14,0,0,11,13,15,1,
+1,6,14,0,3,0,0,1,
+1,1,1,1,1,1,1,1
+</data>
+ </layer>
+</map>

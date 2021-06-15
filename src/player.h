@@ -32,6 +32,7 @@ typedef struct {
     i16 mushroomCount;
     bool redrawMushrooms;
     bool animateLastMushroom;
+    bool autoSpawnMushrooms;
 
 } Player;
 

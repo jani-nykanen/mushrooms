@@ -85,7 +85,7 @@ static i16 get_turn_time() {
 
 static i16 game_init() {
 
-    static const i16 INITIAL_STAGE = 5;
+    static const i16 INITIAL_STAGE = 9;
     static const i16 INITIAL_LEVEL_PACK = 3;
 
     char buffer [16];
@@ -536,15 +536,14 @@ static void game_redraw() {
     if (!game->backgroundDrawn) {
         
         clear_screen(0);
-        draw_stage_info();
-
         game->backgroundDrawn = true;
-        return;
     }
 
     if (!game->bordersDrawn) {
 
         draw_stage_borders();
+        draw_stage_info();
+
         game->bordersDrawn = true;
     }
 

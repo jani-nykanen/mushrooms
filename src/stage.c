@@ -42,7 +42,7 @@ static i16 compute_index(Tilemap* tmap, i16 index) {
 
 static i16 count_food(Tilemap* tmap) {
 
-    return compute_index(tmap, 3) + compute_index(tmap, 14);
+    return compute_index(tmap, 3) + compute_index(tmap, 14) + compute_index(tmap, 15);
 }
 
 
@@ -236,7 +236,7 @@ void stage_draw(Stage* stage, Bitmap* bmpTileset) {
         1, 13, 4, 2, 
         3, 9, 11, 5, 
         6, 7, 8,  0,
-        0, 16, 0,  0,
+        0, 16, 22,  0,
         10, 12, 21};
 
     i16 x, y;
@@ -477,6 +477,15 @@ bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y,
 
         return 4;
     }
+    // Star (at least for now...)
+    else if (tile == 15) {
+
+        stage->staticLayer[index] = 0;
+        -- stage->foodLeft;
+
+        return 5;
+    }
+
     // Portal
     // (sometimes this does not work, maybe the tile value
     // in the initial position is altered somehow?)
