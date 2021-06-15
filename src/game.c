@@ -26,7 +26,6 @@ static const u16 VICTORY_JINGLE_LEN[] = {
 };
 
 
-
 static const str STAGE_TITLES[] = {
     "\"FIRST STEPS\"",
     "\"AUTOMATION\"",
@@ -38,6 +37,35 @@ static const str STAGE_TITLES[] = {
     "\"DIRECTIONS\"",
     "\"BACK AND FORTH\"",
     "\"ALL TOGETHER\"",
+
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\"",
+    "\"NAME PENDING\""
+};
+
+
+static const str DIFFICULTIES[] = {
+    "BEGINNER",
+    "INTERMEDIATE",
+    "ADVANCED"
 };
 
 
@@ -48,7 +76,9 @@ typedef struct {
     Bitmap* bmpTileset;
     Bitmap* bmpFont;
     Bitmap* bmpIcons;
+
     TilemapPack* maps;
+    u16 packIndex;
 
     Stage* stage;
     Player* player;
@@ -85,8 +115,8 @@ static i16 get_turn_time() {
 
 static i16 game_init() {
 
-    static const i16 INITIAL_STAGE = 9;
-    static const i16 INITIAL_LEVEL_PACK = 3;
+    static const i16 INITIAL_STAGE = 1;
+    static const i16 INITIAL_LEVEL_PACK = 1;
 
     char buffer [16];
 
@@ -97,7 +127,9 @@ static i16 game_init() {
         return 1;
     }
 
-    snprintf(buffer, 16, "LEVELS%d.DAT", INITIAL_LEVEL_PACK);
+    game->packIndex = INITIAL_LEVEL_PACK - 1;
+
+    snprintf(buffer, 16, "LEVELS%d.DAT", game->packIndex + 1);
 
     if ((game->maps = load_tilemap_pack(buffer)) == NULL) {
 
@@ -145,6 +177,37 @@ static i16 game_init() {
 }
 
 
+static i16 load_next_map_pack() {
+
+    char buffer[16];
+
+    dispose_tilemap_pack(game->maps);
+
+    ++ game->packIndex;
+    if (game->packIndex >= 3)
+        game->packIndex = 0;
+
+    // Might fix some bugs?
+    /*
+    dispose_player(game->player);
+    game->player = new_player(0, 0, play_turn, get_turn_time);
+    if (game->player == NULL) {
+
+        return 1;
+    }
+    */
+
+    snprintf(buffer, 16, "LEVELS%d.DAT", game->packIndex + 1);
+
+    if ((game->maps = load_tilemap_pack(buffer)) == NULL) {
+
+        return 1;
+    }
+
+    return 0;
+}
+
+
 static void clear_enemy_array() {
 
     i16 i;
@@ -180,13 +243,22 @@ static i16 reset_game() {
 
 static i16 next_stage() {
 
-    i16 stageIndex = game->stage->index;
-
-    clear_enemy_array();
+    i16 stageIndex = game->stage->index + 1;
 
     dispose_stage(game->stage);
 
-    game->stage = new_stage(game->maps, (stageIndex+1) % (game->maps->count));
+    if (stageIndex == game->maps->count) {
+
+        stageIndex = 0;
+        if (load_next_map_pack() != 0) {
+
+            return 1;
+        }
+    }
+
+    clear_enemy_array();
+
+    game->stage = new_stage(game->maps, stageIndex);
     if (game->stage == NULL) {
 
         return 1;
@@ -500,19 +572,19 @@ static void draw_pause_menu() {
 
 static void draw_stage_info() {
 
-    char buffer [10];
+    char buffer [12];
 
-    snprintf(buffer, 10, "LEVEL %d", (i16)game->stage->index+1);
+    snprintf(buffer, 12, "LEVEL %d", (i16)game->packIndex * 10 + (i16)game->stage->index+1);
 
     draw_text_fast(game->bmpFont, buffer, 2, 8, -1, false);
-    draw_text_fast(game->bmpFont, "BEGINNER", 40, 8, -1, true);
+    draw_text_fast(game->bmpFont, DIFFICULTIES[game->packIndex], 40, 8, -1, true);
 
-    draw_colored_text(game->bmpFont, STAGE_TITLES[game->stage->index], 
+    draw_colored_text(game->bmpFont, STAGE_TITLES[game->packIndex*10 + game->stage->index], 
         160, 200-16, true, 1);
 
     draw_text_fast(game->bmpFont, "PASSWORD:", 80 - 18, 8, -1, false);
 
-    snprintf(buffer, 10, "%u", gen_password(0, game->stage->index));
+    snprintf(buffer, 12, "%u", gen_password(game->packIndex, game->stage->index));
     draw_colored_text(game->bmpFont, buffer, 320 - 60, 18, false, 1);
 }
 
