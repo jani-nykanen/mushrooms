@@ -85,7 +85,7 @@ static i16 get_turn_time() {
 
 static i16 game_init() {
 
-    static const i16 INITIAL_STAGE = 2;
+    static const i16 INITIAL_STAGE = 5;
     static const i16 INITIAL_LEVEL_PACK = 3;
 
     char buffer [16];
