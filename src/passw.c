@@ -1,47 +1,68 @@
 #include "passw.h"
 
 
-static const u16 MAX_LEVEL_INDEX = 9;
-static const u16 MAX_LEVEL_PACK_INDEX = 2;
+static const u16 PASSWORDS[] = {
 
+    12321,
+    43209,
+    32191,
+    45328,
+    54999,
+    21001,
+    43129,
+    10023,
+    50001,
+    61149,
 
-static u16 SUITABLE_NUMBER_1 = 3;
-static u16 SUITABLE_NUMBER_2 = 97;
+    10232,
+    32322,
+    29997,
+    49311,
+    35005,
+    45003,
+    10002,
+    60043,
+    53010,
+    60666,
+
+    11112,
+    40022,
+    63011,
+    33332,
+    54541,
+    60002,
+    40401,
+    19992,
+    29807,
+    59939,
+};
 
 
 u16 gen_password(u16 levelPackIndex, u16 levelIndex) {
 
-    u16 out = (levelPackIndex+1) * SUITABLE_NUMBER_1 * 10000;
+    // "Generate" indeed...
 
-    out += levelIndex * SUITABLE_NUMBER_2;
-    out += (levelIndex + levelPackIndex) % 10;
+    u16 i = levelPackIndex*10 + levelIndex;
+    if (i >= 30) return 0;
 
-    return ~out;
+    return PASSWORDS[i];
 }
 
 
 bool get_level_from_password(u16 password, u16* levelPackIndex, u16* levelIndex) {
 
-    u16 pack, level;
+    u16 i;
 
-    password = ~password;
+    for (i = 0; i < 30; ++ i) {
 
-    pack = password / 10000;
-    pack /= SUITABLE_NUMBER_1;
+        if (PASSWORDS[i] == password) {
 
-    level = password - pack * SUITABLE_NUMBER_1 * 10000;
-    level /= 10;
-    level /= SUITABLE_NUMBER_2;
+            *levelIndex = i % 10;
+            *levelPackIndex = i / 10;
 
-    if ((pack + level) % 10 != password % 10 ||
-        level > MAX_LEVEL_INDEX ||
-        pack > MAX_LEVEL_PACK_INDEX) {
-
-        return false;
+            return true;
+        }
     }
 
-    *levelPackIndex = (i16)pack;
-    *levelIndex = (i16)level;
-
-    return true;
+    return false;
 }

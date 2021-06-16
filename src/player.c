@@ -71,9 +71,17 @@ void dispose_player(Player* player) {
 
 void player_set_starting_position(Player* player, i16 x, i16 y) {
 
+    i16 i;
+
     player->pos = vec2(x, y);
     player->target = player->pos;
     player->renderPos = vec2(x*16, y*16);
+
+    // This should prevent infinite "STUCK!" loop...
+    for (i = 1; i < player->mushroomCount; ++ i) {
+
+        player->mushrooms[i] = vec2(0, 0);
+    }
 
     player->mushroomCount = 1;
     player->mushrooms[0] = player->pos;

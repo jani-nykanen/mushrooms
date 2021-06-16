@@ -16,7 +16,6 @@ bitmaps:
 	./tools/bin/png2spr dev/bitmaps/sprites.png output/SPRITES.SPR 16 16 -mask
 	./tools/bin/png2spr dev/bitmaps/tileset.png output/TILESET.SPR 16 16
 	./tools/bin/png2spr dev/bitmaps/font.png output/FONT.SPR 8 8 -mask
-	./tools/bin/png2spr dev/bitmaps/icons.png output/ICONS.SPR 16 16
 
 .PHONY: tilemaps
 tilemaps:

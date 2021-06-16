@@ -135,7 +135,7 @@ Stage* new_stage(TilemapPack* mapPack, i16 initialMapIndex) {
         return NULL;
     }
 
-    stage->redrawBuffer = (u8*) malloc(stage->width * stage->height);
+    stage->redrawBuffer = (u8*) calloc(stage->width * stage->height, 1);
     if (stage->redrawBuffer == NULL) {
 
         ERROR_MALLOC();
@@ -485,7 +485,6 @@ bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y,
 
         return 5;
     }
-
     // Portal
     // (sometimes this does not work, maybe the tile value
     // in the initial position is altered somehow?)

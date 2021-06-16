@@ -75,7 +75,6 @@ typedef struct {
     Bitmap* bmpSprites;
     Bitmap* bmpTileset;
     Bitmap* bmpFont;
-    Bitmap* bmpIcons;
 
     TilemapPack* maps;
     u16 packIndex;
@@ -138,7 +137,6 @@ static i16 game_init() {
 
     if ((game->bmpTileset = load_bitmap("TILESET.SPR")) == NULL ||
         (game->bmpSprites = load_bitmap("SPRITES.SPR")) == NULL ||
-        (game->bmpIcons = load_bitmap("ICONS.SPR")) == NULL ||
         (game->bmpFont = load_bitmap("FONT.SPR")) == NULL) {
 
         return 1;
@@ -447,6 +445,7 @@ static i16 game_update(i16 step) {
     return 0;
 }
 
+#define FRAME_START_INDEX 22
 
 static void draw_stage_borders() {
 
@@ -459,23 +458,23 @@ static void draw_stage_borders() {
 
     for (i = 0; i < w; ++ i) {
 
-        draw_sprite_fast(game->bmpIcons, 0, tx + i*4, ty-16);
+        draw_sprite_fast(game->bmpTileset, FRAME_START_INDEX, tx + i*4, ty-16);
 
-        draw_sprite_fast(game->bmpIcons, 2, tx + i*4, ty + h*16);   
+        draw_sprite_fast(game->bmpTileset, FRAME_START_INDEX+2, tx + i*4, ty + h*16);   
     }
 
     for (i = 0; i < h; ++ i) {
 
-        draw_sprite_fast(game->bmpIcons, 1, tx - 4, ty + i*16);
+        draw_sprite_fast(game->bmpTileset, FRAME_START_INDEX+1, tx - 4, ty + i*16);
 
-        draw_sprite_fast(game->bmpIcons, 3, tx + w*4, ty + i*16);
+        draw_sprite_fast(game->bmpTileset, FRAME_START_INDEX+3, tx + w*4, ty + i*16);
     }
 
     // Corners
-    draw_sprite_fast(game->bmpIcons, 4, tx - 4, ty-16);
-    draw_sprite_fast(game->bmpIcons, 5, tx + w*4, ty-16);
-    draw_sprite_fast(game->bmpIcons, 6, tx - 4, ty + h*16);
-    draw_sprite_fast(game->bmpIcons, 7, tx + w*4, ty + h*16);
+    draw_sprite_fast(game->bmpTileset, FRAME_START_INDEX+4, tx - 4, ty-16);
+    draw_sprite_fast(game->bmpTileset, FRAME_START_INDEX+5, tx + w*4, ty-16);
+    draw_sprite_fast(game->bmpTileset, FRAME_START_INDEX+6, tx - 4, ty + h*16);
+    draw_sprite_fast(game->bmpTileset, FRAME_START_INDEX+7, tx + w*4, ty + h*16);
 }
 
 
@@ -492,18 +491,20 @@ static void draw_overlaying_frame() {
 
         ty += game->player->target.y*16;
 
-        draw_sprite_fast(game->bmpIcons, 1, tx - 4, ty);
-        draw_sprite_fast(game->bmpIcons, 3, tx + w, ty);
+        draw_sprite_fast(game->bmpTileset, FRAME_START_INDEX+1, tx - 4, ty);
+        draw_sprite_fast(game->bmpTileset, FRAME_START_INDEX+3, tx + w, ty);
     }
 
     if (game->player->loopy != 0) {
 
         tx += game->player->target.x*4;
 
-        draw_sprite_fast(game->bmpIcons, 0, tx, ty - 16);
-        draw_sprite_fast(game->bmpIcons, 2, tx, ty + h);
+        draw_sprite_fast(game->bmpTileset, FRAME_START_INDEX+0, tx, ty - 16);
+        draw_sprite_fast(game->bmpTileset, FRAME_START_INDEX+2, tx, ty + h);
     }
 }
+
+#undef FRAME_START_INDEX
 
 
 static void draw_message() {
@@ -666,7 +667,6 @@ void dispose_game_scene() {
     dispose_bitmap(game->bmpTileset);
     dispose_bitmap(game->bmpSprites);
     dispose_bitmap(game->bmpFont);
-    dispose_bitmap(game->bmpIcons);
     
     dispose_tilemap_pack(game->maps);
 
