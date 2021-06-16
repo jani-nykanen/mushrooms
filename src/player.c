@@ -205,7 +205,7 @@ static u8 player_control(Player* player, Stage* stage, i16 step) {
     Vector2 target;
     i16 animationRow = player->animationRow;
     bool stopped = false;
-    i16 ret;
+    i16 ret = 0;
 
     if (player->moving) {
 

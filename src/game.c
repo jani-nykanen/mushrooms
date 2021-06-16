@@ -11,6 +11,7 @@
 #include "enemy.h"
 #include "passw.h"
 #include "mixer.h"
+#include "title.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -338,6 +339,7 @@ static i16 update_pause_menu() {
 
         case 3:
 
+            mixer_beep(38000, 12);
             return 1;
 
         default: 
@@ -352,11 +354,25 @@ static i16 update_pause_menu() {
 }
 
 
+static i16 leave_to_title_screen() {
+
+    if (init_title_scene() != 0) {
+
+        return 1;
+    }
+    title_register_event_callbacks();
+
+    dispose_game_scene();
+    return 0;
+}
+
+
 static i16 game_update(i16 step) {
 
     static const i16 MESSAGE_TIME[] = {60, 120};
 
     u8 ret;
+    i16 iret;
     i16 i;
 
     if (game->messageIndex > 0) {
@@ -383,10 +399,21 @@ static i16 game_update(i16 step) {
 
     if (game->pauseMenuActive) {
         
-        if (update_pause_menu()) {
+        iret = update_pause_menu();
+
+        if (iret == -1) {
 
             return 1;
         }
+        else if (iret == 1) {
+
+            if (leave_to_title_screen() != 0) {
+
+                return 1;
+            }
+            return 0;
+        }
+
         return 0;
     }
 

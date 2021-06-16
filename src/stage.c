@@ -68,6 +68,9 @@ static void set_static_layer(u8* dest, Tilemap* tmap) {
 
     i16 i;
 
+    // Just for sure
+    memset(dest, 0, tmap->width*tmap->height);
+
     for (i = 0; i < tmap->width*tmap->height; ++ i) {
 
         if ((tmap->data[i] >= 12 && tmap->data[i] <= 13))
@@ -135,7 +138,7 @@ Stage* new_stage(TilemapPack* mapPack, i16 initialMapIndex) {
         return NULL;
     }
 
-    stage->redrawBuffer = (u8*) calloc(stage->width * stage->height, 1);
+    stage->redrawBuffer = (u8*) calloc(stage->width * stage->height +1, 1);
     if (stage->redrawBuffer == NULL) {
 
         ERROR_MALLOC();
@@ -144,7 +147,7 @@ Stage* new_stage(TilemapPack* mapPack, i16 initialMapIndex) {
         return NULL;
     }
 
-    stage->solidMap = (u8*) calloc(stage->width*stage->height, 1);
+    stage->solidMap = (u8*) calloc(stage->width*stage->height +1, 1);
     if (stage->solidMap == NULL) {
 
         ERROR_MALLOC();
@@ -181,6 +184,8 @@ void dispose_stage(Stage* stage) {
         free(stage->staticLayer);
 
     free(stage);
+
+    stage = NULL;
 }
 
 
@@ -455,11 +460,16 @@ bool stage_check_underlying_tile(Stage* stage, i16 x, i16 y,
     else if (tile == 6) {
 
         toggle_special_walls(stage, index);
+
+        // This return should be unnecessary, but with it we get rid of one bug
+        // for some weird reason
+        return 0;
     }
     // Button to swap arrows
     else if (tile == 7) {
 
         reverse_arrow_tiles(stage, index);
+        return 0;
     }
     // Apple, eat it!
     else if (tile == 3) {
