@@ -14,6 +14,11 @@ typedef enum {
     KEY_UP = 72,
     KEY_DOWN = 80,
 
+    KEY_1 = 2,
+    KEY_0 = 11,
+
+    KEY_BACKSPACE = 14,
+
     KEY_Q = 16,
     KEY_W = 17,
     KEY_E = 18,

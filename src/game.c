@@ -113,10 +113,8 @@ static i16 get_turn_time() {
 }
 
 
-static i16 game_init() {
+static i16 game_init(u16 levelIndex, u16 packIndex) {
 
-    static const i16 INITIAL_STAGE = 1;
-    static const i16 INITIAL_LEVEL_PACK = 1;
 
     char buffer [16];
 
@@ -127,7 +125,7 @@ static i16 game_init() {
         return 1;
     }
 
-    game->packIndex = INITIAL_LEVEL_PACK - 1;
+    game->packIndex = packIndex;
 
     snprintf(buffer, 16, "LEVELS%d.DAT", game->packIndex + 1);
 
@@ -143,7 +141,7 @@ static i16 game_init() {
         return 1;
     }
 
-    game->stage = new_stage(game->maps, INITIAL_STAGE-1);
+    game->stage = new_stage(game->maps, levelIndex);
     if (game->stage == NULL) {
 
         return 1;
@@ -676,9 +674,9 @@ static void game_redraw() {
 }
 
 
-i16 init_game_scene() {
+i16 init_game_scene(u16 levelIndex, u16 packIndex) {
 
-    return game_init();
+    return game_init(levelIndex, packIndex);
 }
 
 

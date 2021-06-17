@@ -8,7 +8,7 @@
 #define GAME_TURN_TIME 16
 
 
-i16 init_game_scene();
+i16 init_game_scene(u16 levelIndex, u16 packIndex);
 void dispose_game_scene();
 
 void game_register_event_callbacks();
