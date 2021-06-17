@@ -5,7 +5,7 @@
 #include "types.h"
 
 
-i16 init_title_scene();
+i16 init_title_scene(bool playIntro);
 void dispose_title_scene();
 
 void title_register_event_callbacks();

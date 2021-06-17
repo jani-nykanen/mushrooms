@@ -17,9 +17,13 @@
 #define PASSWORD_BUFFER_SIZE 12
 
 
+static const i16 INTRO_TIME = 200;
+
+
 typedef struct {
 
     Bitmap* bmpFont;
+    Bitmap* bmpLogo;
 
     u16 cursorPos;
     bool optionsDrawn;
@@ -29,13 +33,21 @@ typedef struct {
     i16 passwordCursor;
     char passwBuffer [PASSWORD_BUFFER_SIZE];
 
+    bool enterPressed;
+    i16 enterTimer;
+
+    bool introPlayed;
+    i16 introTimer;
+
 } TitleScreen;
 
 
 static TitleScreen* title = NULL;
 
 
-i16 init_title_scene() {
+i16 init_title_scene(bool playIntro) {
+
+    static const i16 INTRO_WAIT_TIME = 30;
 
     title = (TitleScreen*) calloc(1, sizeof(TitleScreen));
     if (title == NULL) {
@@ -44,7 +56,8 @@ i16 init_title_scene() {
         return 1;
     }
 
-    if ((title->bmpFont = load_bitmap("FONT.SPR")) == NULL) {
+    if ((title->bmpFont = load_bitmap("FONT.SPR")) == NULL ||
+        (title->bmpLogo = load_bitmap("LOGO.SPR")) == NULL) {
 
         dispose_title_scene();
         return 1;
@@ -57,6 +70,12 @@ i16 init_title_scene() {
     title->passwordCursor = 0;
     title->inputPassword = 0;
     title->passwBuffer[0] = '\0';
+
+    title->enterTimer = 59;
+    title->enterPressed = !playIntro;
+
+    title->introPlayed = !playIntro;
+    title->introTimer = -INTRO_WAIT_TIME;
 
     return 0;
 }
@@ -206,6 +225,29 @@ static i16 title_update(i16 step) {
 
     i16 ret;
 
+    if (!title->introPlayed) {
+        
+        if ((title->introTimer += step) >= INTRO_TIME) {
+
+            title->introPlayed = true;
+            title->backgroundDrawn = false;
+        }
+        
+        return 0;
+    }
+
+    if (!title->enterPressed) {
+
+        title->enterTimer = (title->enterTimer + step) % 60;
+        if (keyb_get_normal_key(KEY_RETURN) == STATE_PRESSED) {
+
+            title->enterPressed = true;
+            mixer_beep_2_step(40000, 6, 52000, 16);
+        }
+
+        return 0;
+    }
+
     if (title->inputPassword) {
 
         ret = input_password();
@@ -222,7 +264,7 @@ static i16 title_update(i16 step) {
             }
             else if (ret == 0) {
 
-                mixer_beep(42000, 30);
+                mixer_beep_2_step(36000, 10, 42000, 20);
 
                 dispose_title_scene();
                 return 0;
@@ -266,7 +308,7 @@ static void draw_options() {
     };
     static const str AUDIO_OFF = "AUDIO: OFF";
 
-    static const i16 TOP_Y = 200-64;
+    static const i16 TOP_Y = 200-72;
     static const i16 LEFT_X = 160 - 10*4;
     static const i16 OFFSET = 12;
 
@@ -274,6 +316,8 @@ static void draw_options() {
     str text;
 
     if (!title->optionsDrawn) {
+
+        fill_rect_fast(LEFT_X/4-2, TOP_Y, 24, 5*12, 0);
 
         for (i = 0; i < 4; ++ i) {
             
@@ -297,35 +341,86 @@ static void draw_options() {
 
 static void draw_password_input() {
 
+    static const i16 TOP_Y = 128;
+
     if (!title->optionsDrawn) {
 
-        fill_rect_fast(0, 100, 80, 100, 0);
+        fill_rect_fast(0, TOP_Y, 80, 200-TOP_Y, 0);
         title->optionsDrawn = true;
 
         draw_text_fast(title->bmpFont, "INPUT PASSWORD:",
-            40, 100, -1, true);
+            40, TOP_Y, -1, true);
         draw_text_fast(title->bmpFont, "(NUMBERS ONLY!)",
-            40, 112, -1, true);
+            40, TOP_Y+12, -1, true);
     }
 
-    fill_rect_fast(140/4, 128, 6*2, 8, 0);
+    fill_rect_fast(140/4, TOP_Y+32, 6*2, 8, 0);
     draw_colored_text(title->bmpFont, title->passwBuffer,
-            140, 128, false, 1);
+            140, TOP_Y+32, false, 1);
 
     if (title->passwordCursor < 5) {
 
         draw_colored_text(title->bmpFont, "_",
-                140 + title->passwordCursor*8, 128, false, 1);
+                140 + title->passwordCursor*8, TOP_Y+32, false, 1);
     }
+}
+
+
+static void draw_intro() {
+
+    static u8 COLORS[] = {0, 2, 1, 3};
+
+    i16 color = 3;
+
+    if (title->introTimer < 0) return;
+
+    if (title->introTimer < 40) {
+
+        color = title->introTimer / 10;
+    }
+    else if (title->introTimer >= INTRO_TIME - 40) {
+
+        color = 3 - min_i16((title->introTimer - (INTRO_TIME-40)) / 10, 3);
+    }
+
+    color = COLORS[color];
+
+    draw_colored_text(title->bmpFont, "A game by", 160, 100-10, true, color);
+    draw_colored_text(title->bmpFont, "Jani Nyk~nen", 160, 100+1, true, color);
 }
 
 
 static void title_redraw() {
 
+    static const i16 ENTER_Y = 144;
+
     if (!title->backgroundDrawn) {
 
         clear_screen(0);
         title->backgroundDrawn = true;
+
+        if (title->introPlayed) {
+
+            draw_colored_text(title->bmpFont, "@2021 Jani Nyk~nen", 160, 190, true, 1);
+            draw_sprite_fast(title->bmpLogo, 0, 40-32, 32);
+        }
+    }
+
+    if (!title->introPlayed) {
+
+        draw_intro();
+        return;
+    }
+
+    if (!title->enterPressed) {
+
+        fill_rect_fast(40 - 11, ENTER_Y, 22, 8, 0);
+        if (title->enterTimer < 30) {
+
+            draw_text_fast(title->bmpFont, "PRESS ENTER",
+                40, ENTER_Y, -1, true);
+        }
+        return;
     }
 
     if (title->inputPassword) {
@@ -343,6 +438,7 @@ void dispose_title_scene() {
     if (title == NULL) return;
 
     dispose_bitmap(title->bmpFont);
+    dispose_bitmap(title->bmpLogo);
 
     free(title);
 

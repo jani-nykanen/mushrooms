@@ -354,7 +354,7 @@ static i16 update_pause_menu() {
 
 static i16 leave_to_title_screen() {
 
-    if (init_title_scene() != 0) {
+    if (init_title_scene(false) != 0) {
 
         return 1;
     }

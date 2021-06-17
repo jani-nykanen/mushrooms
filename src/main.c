@@ -19,7 +19,7 @@ static void print_errors() {
 i16 main(i16 argc, str* argv) {
 
     if (init_system(PALETTE_WARM) != 0 ||
-        init_title_scene() != 0) {
+        init_title_scene(true) != 0) {
 
         dispose_system();
         print_errors();
