@@ -107,7 +107,8 @@ static void shift_mushrooms(Player* player, Stage* stage) {
     i16 pointer = 0;
     i16 i;
 
-    if (player->mushroomCount == 0) return;
+    if (player->mushroomCount == 0 ||
+        player->mushroomCount >= MAX_MUSHROOMS) return;
 
     stage_mark_solid(stage, 
         player->mushrooms[player->mushroomCount-1].x,
