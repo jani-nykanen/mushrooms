@@ -39,27 +39,27 @@ static const str STAGE_TITLES[] = {
     "\"BACK AND FORTH\"",
     "\"ALL TOGETHER\"",
 
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
+    "\"BLOCK THE WALLS\"",
+    "\"ROADBLOCK\"",
+    "\"SYMMETRY\"",
+    "\"NOT ALONE\"",
+    "\"PEDASTRIAN\"",
+    "\"PRISON\"",
+    "\"TRAFFIC JAM\"",
+    "\"VORTEX\"",
+    "\"RUSH HOUR\"",
+    "\"ALMOST CHAOTIC\"",
 
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\"",
-    "\"NAME PENDING\""
+    "\"RADISH\"",
+    "\"ROCKS\"",
+    "\"DINNER\"",
+    "\"BLOCKED\"",
+    "\"FARMER\"",
+    "\"STAR POWER\"",
+    "\"POWER STAR\"",
+    "\"THINGS\"",
+    "\"STUFF\"",
+    "\"FACTORY\""
 };
 
 
@@ -598,12 +598,14 @@ static void draw_pause_menu() {
 
 static void draw_stage_info() {
 
+    static const u8 COLORS[] = {3, 1, 2};
+
     char buffer [12];
 
     snprintf(buffer, 12, "LEVEL %d", (i16)game->packIndex * 10 + (i16)game->stage->index+1);
 
     draw_text_fast(game->bmpFont, buffer, 2, 8, -1, false);
-    draw_text_fast(game->bmpFont, DIFFICULTIES[game->packIndex], 40, 8, -1, true);
+    draw_colored_text(game->bmpFont, DIFFICULTIES[game->packIndex], 160, 8, true, COLORS[game->packIndex]);
 
     draw_colored_text(game->bmpFont, STAGE_TITLES[game->packIndex*10 + game->stage->index], 
         160, 200-16, true, 1);

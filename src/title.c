@@ -18,6 +18,7 @@
 
 
 static const i16 INTRO_TIME = 200;
+static const i16 FLICKER_TIME = 60;
 
 
 typedef struct {
@@ -38,6 +39,8 @@ typedef struct {
 
     bool introPlayed;
     i16 introTimer;
+
+    i16 flickerTimer;
 
 } TitleScreen;
 
@@ -76,6 +79,8 @@ i16 init_title_scene(bool playIntro) {
 
     title->introPlayed = !playIntro;
     title->introTimer = -INTRO_WAIT_TIME;
+
+    title->flickerTimer = 0;
 
     return 0;
 }
@@ -225,6 +230,18 @@ static i16 title_update(i16 step) {
 
     i16 ret;
 
+    if (title->flickerTimer > 0) {
+
+        if ((title->flickerTimer -= step) <= 0) {
+
+            if (go_to_game_scene() != 0) {
+
+            return 1;
+            }
+            dispose_title_scene();
+        }
+    }
+
     if (!title->introPlayed) {
         
         if ((title->introTimer += step) >= INTRO_TIME) {
@@ -281,12 +298,11 @@ static i16 title_update(i16 step) {
     ret = update_options();
     if (ret == 2) {
 
-        if (go_to_game_scene() != 0) {
+        mixer_beep_3_step(40000, 6, 42500, 12, 45000, 30);
 
-            return 1;
-        }
-        dispose_title_scene();
-        
+        title->flickerTimer = FLICKER_TIME;
+        title->optionsDrawn = false;
+
         return 0;
     }
     else if (ret == 1) {
@@ -390,6 +406,24 @@ static void draw_intro() {
 }
 
 
+static void draw_flickering_new_game() {
+
+    static const i16 TOP_Y = 128;
+    static const i16 LEFT_X = 160 - 10*4;
+
+    i16 t = title->flickerTimer % 10;
+
+    if (!title->optionsDrawn) {
+
+        fill_rect_fast(0, TOP_Y, 80, 172-TOP_Y, 0);
+        title->optionsDrawn = true;
+    }
+
+    draw_colored_text(title->bmpFont, (const str)"NEW GAME",
+                LEFT_X, TOP_Y, false, t < 5 ? 3 : 0);
+}
+
+
 static void title_redraw() {
 
     static const i16 ENTER_Y = 144;
@@ -409,6 +443,12 @@ static void title_redraw() {
     if (!title->introPlayed) {
 
         draw_intro();
+        return;
+    }
+
+    if (title->flickerTimer > 0) {
+
+        draw_flickering_new_game();
         return;
     }
 
