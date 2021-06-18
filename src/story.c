@@ -37,6 +37,12 @@ typedef struct {
 
     i16 charPos;
     i16 charTimer;
+    i16 len;
+    char* buffer;
+
+    i16 charX;
+    i16 charY;
+    bool charChanged;
 
 } StoryScene;
 
@@ -56,6 +62,13 @@ i16 init_story_scene(bool isEnding) {
     story->charPos = 0;
     story->charTimer = 0;
 
+    story->buffer = isEnding ? STORY_ENDING : STORY_INTRO;
+    story->len = (i16) strlen(story->buffer);
+
+    story->charX = 0;
+    story->charY = 0;
+    story->charChanged = true;
+
     return 0;
 }
 
@@ -72,17 +85,75 @@ void dispose_story_scene() {
 
 static i16 story_update(i16 step) {
 
+    static const i16 CHAR_TIME = 4;
+
+    if (keyb_get_normal_key(KEY_RETURN) == STATE_PRESSED) {
+
+        if (story->charPos < story->len-1) {
+
+            story->charPos = story->len-1;
+            story->charTimer = 0;
+        }
+        else {
+
+            if (init_game_scene(0, 0) != 0) {
+
+                return 1;
+            }
+            game_register_event_callbacks();
+            
+            dispose_story_scene();
+
+            return 0;
+        }
+    }
+
+    if (story->charPos < story->len-1) {
+
+        if ((story->charTimer += step) >= CHAR_TIME) {
+
+            story->charTimer -= CHAR_TIME;
+            ++ story->charPos;
+
+            story->charChanged = true;
+
+            if (story->buffer[story->charPos] == '\n') {
+
+                ++ story->charY;
+                story->charX = -1;
+            }
+            else {
+
+                ++ story->charX;
+            }
+        }
+    }
+
     return 0;
 }
 
 
 static void story_redraw() {
 
+    static const i16 LEFT = 20;
+    static const i16 TOP = 32;
+    static const i16 OFFSET = 10;
+
     if (!story->backgroundCleared) {
 
         clear_screen(0);
 
         story->backgroundCleared = true;
+    }
+
+    if (story->charChanged && story->buffer[story->charPos] != '\n') {
+
+        draw_sprite_fast(story->bmpFont,
+            story->buffer[story->charPos],
+            (LEFT + story->charX*8) / 4,
+            TOP + story->charY*OFFSET);
+
+        story->charChanged = false;
     }
 }
 

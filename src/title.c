@@ -8,6 +8,7 @@
 #include "mixer.h"
 #include "mathext.h"
 #include "game.h"
+#include "story.h"
 #include "passw.h"
 
 #include <stdlib.h>
@@ -184,13 +185,13 @@ static i16 update_options() {
 }
 
 
-static i16 go_to_game_scene() {
+static i16 go_to_story_screen() {
 
-    if (init_game_scene(0, 0) != 0) {
+    if (init_story_scene(false) != 0) {
 
         return 1;
     }
-    game_register_event_callbacks();
+    story_register_event_callbacks();
 
     return 0;
 }
@@ -234,7 +235,7 @@ static i16 title_update(i16 step) {
 
         if ((title->flickerTimer -= step) <= 0) {
 
-            if (go_to_game_scene() != 0) {
+            if (go_to_story_screen() != 0) {
 
             return 1;
             }
