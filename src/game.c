@@ -27,6 +27,15 @@ static const u16 VICTORY_JINGLE_LEN[] = {
 };
 
 
+static const u16 START_JINGLE_FREQ[] = {
+    40000, 32000, 35000, 40000, 42000
+};
+
+static const u16 START_JINGLE_LEN[] = {
+    12, 6, 6, 12, 18
+};
+
+
 static const str STAGE_TITLES[] = {
     "\"FIRST STEPS\"",
     "\"AUTOMATION\"",
@@ -115,8 +124,9 @@ static i16 get_turn_time() {
 
 static i16 game_init(u16 levelIndex, u16 packIndex) {
 
-
     char buffer [16];
+
+    bool playJingle = levelIndex == 0 && packIndex == 0;
 
     game = (GameScene*) calloc(1, sizeof(GameScene));
     if (game == NULL) {
@@ -169,6 +179,12 @@ static i16 game_init(u16 levelIndex, u16 packIndex) {
     game->messageIndex = 0;
     game->messageDrawn = false;
     game->pauseMenuActive = false;
+
+    if (playJingle) {
+
+        mixer_play_buffered_sound((u16*)START_JINGLE_FREQ, 
+            (u16*)START_JINGLE_LEN, 5);
+    }
 
     return 0;
 }

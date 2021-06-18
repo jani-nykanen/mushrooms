@@ -43,6 +43,7 @@ typedef struct {
     i16 charX;
     i16 charY;
     bool charChanged;
+    bool redrawAll;
 
 } StoryScene;
 
@@ -68,6 +69,7 @@ i16 init_story_scene(bool isEnding) {
     story->charX = 0;
     story->charY = 0;
     story->charChanged = true;
+    story->redrawAll = false;
 
     return 0;
 }
@@ -93,6 +95,11 @@ static i16 story_update(i16 step) {
 
             story->charPos = story->len-1;
             story->charTimer = 0;
+            story->charChanged = false;
+
+            story->redrawAll = true;
+
+            mixer_beep(42000, 8);
         }
         else {
 
@@ -101,7 +108,7 @@ static i16 story_update(i16 step) {
                 return 1;
             }
             game_register_event_callbacks();
-            
+
             dispose_story_scene();
 
             return 0;
@@ -136,7 +143,7 @@ static i16 story_update(i16 step) {
 static void story_redraw() {
 
     static const i16 LEFT = 20;
-    static const i16 TOP = 32;
+    static const i16 TOP = 100-30;
     static const i16 OFFSET = 10;
 
     if (!story->backgroundCleared) {
@@ -146,7 +153,17 @@ static void story_redraw() {
         story->backgroundCleared = true;
     }
 
-    if (story->charChanged && story->buffer[story->charPos] != '\n') {
+    if (story->redrawAll) {
+
+        set_text_y_offset(10);
+        draw_text_fast(story->bmpFont, story->buffer,
+            LEFT/4, TOP, -1, false);
+        set_text_y_offset(8);
+
+        story->redrawAll = false;
+    }
+    else if (story->charChanged && 
+        story->buffer[story->charPos] != '\n') {
 
         draw_sprite_fast(story->bmpFont,
             story->buffer[story->charPos],

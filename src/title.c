@@ -241,6 +241,7 @@ static i16 title_update(i16 step) {
             }
             dispose_title_scene();
         }
+        return 0;
     }
 
     if (!title->introPlayed) {

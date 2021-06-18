@@ -14,6 +14,12 @@ static const u32 CGA_ODD = 0xB8002000L;
 static const u32 ADDR[] = {0xB8000000L, 0xB8002000L};
 
 
+// Should be a parameter in a function call, but that would
+// force me to rewrite too many function calls, so let it be
+// like this for now
+static i16 textOffset = 8;
+
+
 static void set_video_mode(u8 mode);
 #pragma aux set_video_mode = \
     "mov ah, 0" \
@@ -112,7 +118,7 @@ static void draw_text_base(
         if (c == '\n') {
 
             dx = x;
-            dy += d;
+            dy += textOffset;
             continue;
         }
 
@@ -127,6 +133,8 @@ void init_graphics(CGAPalette palette) {
 
     set_video_mode(5);
     set_palette(palette);
+
+    textOffset = 8;
 }
 
 
@@ -351,4 +359,10 @@ void draw_colored_text(Bitmap* font, const str text,
 
     fill_rect(dx, y, (i16)strlen(text) * 8, 8, color);
     draw_text(font, text, x, y, -1, center);
+}
+
+
+void set_text_y_offset(i16 offset) {
+
+    textOffset = offset;
 }

@@ -36,4 +36,6 @@ void draw_text(Bitmap* font, const str text,
 void draw_colored_text(Bitmap* font, const str text, 
     i16 x, i16 y, bool center, u8 color);
 
+void set_text_y_offset(i16 offset);
+
 #endif // __GRAPHICS__
