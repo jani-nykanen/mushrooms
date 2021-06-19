@@ -1,4 +1,4 @@
-(logo here)
+![](https://github.com/jani-nykanen/mushrooms/blob/main/pictures/logo.png?raw=true)
 
 ## MUSHROOMS!
 
