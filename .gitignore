@@ -1,3 +1,5 @@
 output
 project
 tools/bin
+*.zip
+dist
