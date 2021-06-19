@@ -29,3 +29,14 @@ assets: bitmaps tilemaps
 
 run:
 	(cd output; dosbox game.exe)
+
+
+.PHONY: dist
+dist:
+	mkdir -p dist 
+	cp output/game.exe dist/MUSHR.EXE
+	cp output/*.SPR dist
+	cp output/*.DAT dist
+	(cd dist; zip -FSr ../dist.zip .)
+	rm -rf dist
+
