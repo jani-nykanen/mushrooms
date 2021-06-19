@@ -15,7 +15,15 @@ This said, I recommend playing the game only on DOSBox. I do not know if the gam
 
 [See "Releases" to download the binary executable for MS-DOS](https://github.com/jani-nykanen/mushrooms/releases).
 
-----
+-----
+
+
+### Screenshots
+
+![](https://github.com/jani-nykanen/mushrooms/blob/main/pictures/screenshots.png?raw=true)
+
+
+-----
 
 
 ### Building
