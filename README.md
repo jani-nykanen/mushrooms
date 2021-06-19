@@ -13,7 +13,7 @@ This said, I recommend playing the game only on DOSBox. I do not know if the gam
 
 ### Playing
 
-See "Releases" to download the binary executable for MS-DOS.
+[See "Releases" to download the binary executable for MS-DOS](https://github.com/jani-nykanen/mushrooms/releases).
 
 ----
 
