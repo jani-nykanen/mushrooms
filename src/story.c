@@ -8,6 +8,7 @@
 #include "mixer.h"
 #include "mathext.h"
 #include "game.h"
+#include "title.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -15,17 +16,19 @@
 
 static const str STORY_INTRO = 
 "Welcome to the world of MUSHROOMS!\n"
-"This game does not really have a\n"
-"story, but let us pretend that it\n"
-"does, because it is the only way to\n"
-"give you, the player, enough moti-\n"
-"vation to solve 30 crappy puzzles.";
+"You are an alien creature who got\n"
+"lost in an unknown planet. Eat\n"
+"everything you see and try to\n"
+"find a way home. Just beware:\n"
+"certain types of food have a\n"
+"strange effect on your metabolism!";
 
 
 static const str STORY_ENDING = 
-"Congratulations! You have beaten\n"
-"every single level in the game.\n"
-"Your life must be really boring!";
+"Congratulations! You finally found\n"
+"a way to your home planet! Let us\n"
+"just hope that you will not see\n"
+"any mushrooms any time soon!"; 
 
 
 typedef struct {
@@ -103,11 +106,24 @@ static i16 story_update(i16 step) {
         }
         else {
 
-            if (init_game_scene(0, 0) != 0) {
+            if (!story->isEnding) {
 
-                return 1;
+                if (init_game_scene(0, 0) != 0) {
+
+                    return 1;
+                }
+                game_register_event_callbacks();
             }
-            game_register_event_callbacks();
+            else {
+
+                if (init_title_scene(false) != 0) {
+
+                    return 1;
+                }
+                title_register_event_callbacks();
+
+                mixer_beep(42000, 8);
+            }
 
             dispose_story_scene();
 
@@ -133,6 +149,14 @@ static i16 story_update(i16 step) {
 
                 ++ story->charX;
             }
+
+            while (story->buffer[story->charPos] == ' ') {
+
+                ++ story->charPos;
+                ++ story->charX;
+
+                if (story->charPos == story->len-1) break;
+            }
         }
     }
 
@@ -143,8 +167,10 @@ static i16 story_update(i16 step) {
 static void story_redraw() {
 
     static const i16 LEFT = 20;
-    static const i16 TOP = 100-30;
+    static const i16 TOP[] = {100-35, 100-20};
     static const i16 OFFSET = 10;
+
+    i16 topY = TOP[(i16)story->isEnding];
 
     if (!story->backgroundCleared) {
 
@@ -157,7 +183,7 @@ static void story_redraw() {
 
         set_text_y_offset(10);
         draw_text_fast(story->bmpFont, story->buffer,
-            LEFT/4, TOP, -1, false);
+            LEFT/4, topY, -1, false);
         set_text_y_offset(8);
 
         story->redrawAll = false;
@@ -168,7 +194,7 @@ static void story_redraw() {
         draw_sprite_fast(story->bmpFont,
             story->buffer[story->charPos],
             (LEFT + story->charX*8) / 4,
-            TOP + story->charY*OFFSET);
+            topY + story->charY*OFFSET);
 
         story->charChanged = false;
     }

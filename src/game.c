@@ -12,6 +12,7 @@
 #include "passw.h"
 #include "mixer.h"
 #include "title.h"
+#include "story.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -257,6 +258,20 @@ static i16 reset_game() {
 static i16 next_stage() {
 
     i16 stageIndex = game->stage->index + 1;
+
+    if (stageIndex == game->maps->count &&
+        game->packIndex == 2) {
+
+        if (init_story_scene(true) != 0) {
+
+            return 1;
+        }
+        story_register_event_callbacks();
+        
+        dispose_game_scene();
+
+        return 0;
+    }
 
     dispose_stage(game->stage);
 
